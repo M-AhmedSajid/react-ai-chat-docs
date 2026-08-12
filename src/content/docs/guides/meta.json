@@ -1,0 +1,4 @@
+{
+  "title": "Guides",
+  "pages": ["customization", "system-prompt", "rag", "cli"]
+}
