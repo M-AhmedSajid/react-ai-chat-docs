@@ -144,4 +144,9 @@
   :not(pre) > code {
     @apply rounded-sm bg-accent px-1.5 py-0.5 font-mono text-accent-foreground;
   }
+
+  ::highlight(fd-feedback-text) {
+    color: var(--color-fd-primary-foreground);
+    background-color: var(--color-fd-primary)
+  }
 }

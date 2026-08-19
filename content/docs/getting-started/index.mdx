@@ -1,0 +1,131 @@
+---
+title: Installation
+description: Install react-ai-chat and prepare your React application for the chatbot.
+---
+
+# Installation
+
+Install `react-ai-chat` in your React application, then import its stylesheet globally.
+
+<Callout type="info">
+  <strong>Prerequisites</strong>
+
+  <ul>
+    <li>Node.js 18 or later</li>
+    <li>React 18 or React 19</li>
+    <li>Basic familiarity with React and TypeScript</li>
+  </ul>
+</Callout>
+
+## Install the package
+
+<Steps>
+  <Step>
+    ### Install react-ai-chat
+
+    <Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+      <Tab value="npm">
+
+      ```bash
+      npm install react-ai-chat
+      ```
+
+      </Tab>
+
+      <Tab value="pnpm">
+
+      ```bash
+      pnpm add react-ai-chat
+      ```
+
+      </Tab>
+
+      <Tab value="yarn">
+
+      ```bash
+      yarn add react-ai-chat
+      ```
+
+      </Tab>
+
+      <Tab value="bun">
+
+      ```bash
+      bun add react-ai-chat
+      ```
+
+      </Tab>
+    </Tabs>
+
+  </Step>
+
+  <Step>
+    ### Import the stylesheet
+
+    Import the package stylesheet once in your application's global stylesheet entry.
+
+    ```tsx
+    import "react-ai-chat/style.css";
+    ```
+
+    Where you place this import depends on your framework. Keep it in a global location that is loaded by your application.
+
+    <Callout type="warn">
+      The chatbot relies on this stylesheet for its default layout and appearance. Make sure it is loaded before rendering the chatbot.
+    </Callout>
+
+  </Step>
+</Steps>
+
+## AI provider dependencies
+
+The base package does not require you to install every supported AI provider.
+
+Install the provider SDK you plan to use when setting up your [API Route](/docs/getting-started/api-route).
+
+For example, if you are using the Google provider with the AI SDK:
+
+```bash
+npm install ai @ai-sdk/google
+```
+
+You only need the dependencies required by your chosen setup.
+
+<Callout type="info">
+  Provider-specific installation steps are covered in the
+  [Providers](/docs/providers) section.
+</Callout>
+
+## Server setup
+
+`react-ai-chat` provides a server-side `createChatRoute()` helper for creating your chatbot endpoint.
+
+The server setup requires an AI SDK-compatible model. The exact dependencies depend on the provider you choose.
+
+You can continue to [API Route](/docs/getting-started/api-route) when you are ready to connect the chatbot to a model.
+
+## Framework setup
+
+The installation steps above work independently of your React framework.
+
+The [Quick Start](/docs/getting-started/quickstart) guide covers the complete setup in a tested framework, including the application structure and API route.
+
+## What's next?
+
+<Cards>
+  <Card
+    title="Quick Start"
+    description="Build your first working chatbot from installation to a streamed AI response."
+    href="/docs/getting-started/quick-start"
+  />
+  <Card
+    title="Chatbot UI"
+    description="Learn how to configure and customize the chatbot interface."
+    href="/docs/getting-started/chatbot-ui"
+  />
+  <Card
+    title="API Route"
+    description="Connect your chatbot to an AI SDK-compatible model."
+    href="/docs/getting-started/api-route"
+  />
+</Cards>

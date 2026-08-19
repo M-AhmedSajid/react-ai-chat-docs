@@ -1,0 +1,260 @@
+---
+title: Quick Start
+description: Build your first react-ai-chat chatbot with Next.js and Google AI.
+---
+
+# Quick Start
+
+This guide walks you through a complete `react-ai-chat` setup using Next.js and Google's AI SDK.
+
+By the end, you will have a chatbot available throughout your application that sends messages to a Google AI model and streams the response back to the UI.
+
+<Callout type="info">
+  This guide uses Next.js App Router. For framework-specific details outside
+  this example, see the framework setup guidance in this documentation.
+</Callout>
+
+<Steps>
+    <Step>
+## Install the dependencies
+
+Install `react-ai-chat` and the Google provider SDK:
+
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
+
+```bash
+npm install react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+
+  <Tab value="pnpm">
+
+```bash
+pnpm add react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+
+  <Tab value="yarn">
+
+```bash
+yarn add react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+
+  <Tab value="bun">
+
+```bash
+bun add react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+</Tabs>
+
+The `ai` package is already included as a dependency of `react-ai-chat`, so you don't need to install it separately.
+
+If you haven't installed the package yet, see [Installation](/docs/getting-started/installation).
+
+    </Step>
+    <Step>
+## Add your API key
+
+Create a `.env.local` file in the root of your Next.js application:
+
+```text
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+```
+
+The Google provider reads this variable automatically.
+
+Keep your API key on the server. Do not expose it through client-side environment variables.
+
+    </Step>
+    <Step>
+## Create the API route
+
+Create:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Add the following:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+The `createChatRoute()` helper creates the endpoint that receives messages from the chatbot and streams the model response back to the client.
+
+For configuration options such as system prompts, message limits, and [RAG](/docs/rag), see [API Route](/docs/getting-started/api-route).
+
+    </Step>
+    <Step>
+## Create the chatbot component
+
+Since this chatbot will be available throughout the application, create a client component for it.
+
+For example:
+
+```text
+components/
+└── chatbot.tsx
+```
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function ChatbotProvider() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+The `"use client"` directive is required because the chatbot is an interactive React component.
+
+The `apiEndpoint` points to the API route you created in the previous step.
+
+Learn more about the component and its configuration in [Chatbot UI](/docs/getting-started/chatbot-ui).
+
+    </Step>
+    <Step>
+## Add the chatbot to your layout
+
+To make the chatbot available throughout your application, import the client wrapper into your root layout.
+
+```tsx
+import { ChatbotProvider } from "@/components/chatbot";
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <ChatbotProvider />
+      </body>
+    </html>
+  );
+}
+```
+
+Your application now has the chatbot available across its pages.
+
+If you only need a chatbot on a specific page, you can render the client component there instead of adding it to the root layout.
+
+## Project structure
+
+Your project should now look similar to this:
+
+```text
+your-app/
+├── app/
+│   ├── api/
+│   │   └── chat/
+│   │       └── route.ts
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   └── chatbot.tsx
+├── .env.local
+├── package.json
+└── ...
+```
+
+    </Step>
+    <Step>
+## Start your application
+
+Run the development server:
+
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}> <Tab value="npm">
+
+```bash
+npm run dev
+```
+
+  </Tab>
+
+  <Tab value="pnpm">
+
+```bash
+pnpm dev
+```
+
+  </Tab>
+
+  <Tab value="yarn">
+
+```bash
+yarn dev
+```
+
+  </Tab>
+
+  <Tab value="bun">
+
+```bash
+bun dev
+```
+
+  </Tab>
+</Tabs>
+
+Open your application in the browser and send a message.
+
+The request flows through:
+
+```text
+Chatbot
+   ↓
+/api/chat
+   ↓
+createChatRoute()
+   ↓
+Google AI
+   ↓
+Streaming response
+   ↓
+Chatbot
+```
+
+You now have a working AI chatbot.
+    </Step>
+</Steps>
+
+## Where to go next
+
+<Cards>
+  <Card
+    title="Chatbot UI"
+    description="Learn how to configure the chatbot component, props, themes, and customization."
+    href="/docs/getting-started/chatbot-ui"
+  />
+  <Card
+    title="API Route"
+    description="Configure createChatRoute and connect your application to different AI models."
+    href="/docs/getting-started/api-route"
+  />
+  <Card
+    title="RAG"
+    description="Add document retrieval so your chatbot can answer questions using your own content."
+    href="/docs/rag"
+  />
+</Cards>

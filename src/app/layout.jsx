@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    default: "next-ai-chatbot",
-    template: "%s | next-ai-chatbot",
+    default: "react-ai-chat",
+    template: "%s | react-ai-chat",
   },
   description:
     "A complete AI chatbot toolkit with streaming, RAG, embeddings, and a customizable React UI.",
@@ -28,6 +28,7 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans">
         <RootProvider

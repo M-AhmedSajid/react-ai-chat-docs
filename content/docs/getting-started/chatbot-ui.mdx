@@ -1,0 +1,292 @@
+---
+title: Chatbot UI
+description: Add and configure the react-ai-chat chatbot component in your React application.
+---
+
+# Chatbot UI
+
+The `Chatbot` component provides the complete interactive chatbot interface. It manages the chat state, sends messages to your configured [API Route](/docs/getting-started/api-route), and displays streamed responses.
+
+For the full list of available options, see [Chatbot Props](/docs/chatbot/props).
+
+## Basic usage
+
+Import `Chatbot` from `react-ai-chat` and provide the endpoint that handles your chat requests.
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+
+<Chatbot apiEndpoint="/api/chat" />
+```
+
+The endpoint should point to the route created for your AI model. If you are following the [Quick Start](/docs/getting-started/quickstart), this is `/api/chat`.
+
+<Callout type="info">
+  Make sure you have imported the package stylesheet. See [Installation](/docs/getting-started/installation) for the initial setup.
+</Callout>
+
+```tsx
+import "react-ai-chat/style.css";
+```
+
+## Add it to your application
+
+The chatbot is an interactive client component. In frameworks that support server and client components, such as Next.js, place it inside a client component.
+
+### Application-wide
+
+If you want the chatbot available throughout your application, create a small client component and render it from your root layout.
+
+```tsx title="components/chatbot.tsx"
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function ChatbotProvider() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+Then add the component to your root layout:
+
+```tsx title="app/layout.tsx"
+import { ChatbotProvider } from "@/components/chatbot";
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <ChatbotProvider />
+      </body>
+    </html>
+  );
+}
+```
+
+This keeps the chatbot available while navigating between pages.
+
+### Page-specific
+
+If the chatbot only belongs on a specific page, render the client component there instead.
+
+```tsx title="components/page-chatbot.tsx"
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+
+export function PageChatbot() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+Then use it from the page where you need it.
+
+This approach is useful when different sections of your application need different chatbot configurations.
+
+## Common options
+
+You can configure the initial state, position, text, and starter prompts directly through props.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  title="AI Assistant"
+  subtitle="How can I help?"
+  position="bottom-left"
+  initialOpen
+  placeholder="Ask a question..."
+  starterPrompts={[
+    "What can you help me with?",
+    "Tell me about this project.",
+  ]}
+/>
+```
+
+The available position values are:
+
+```text
+bottom-right
+bottom-left
+top-right
+top-left
+```
+
+The default position is `bottom-right`.
+
+See [Chatbot Props](/docs/chatbot/props) for the complete list of component options.
+
+## Starter prompts
+
+Starter prompts appear when the conversation has no messages. They give users a few useful actions to begin with.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  starterPrompts={[
+    "What can you help me with?",
+    "Explain this project",
+    "Show me an example",
+  ]}
+/>
+```
+
+You can also customize the text displayed around the prompts.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  starterPrompts={[
+    "What can you help me with?",
+    "Tell me about the documentation.",
+  ]}
+  starterPromptsLabel="Try asking"
+  emptyStateText="Start a conversation"
+/>
+```
+
+For the complete starter prompt configuration, see [Starter Prompts](/docs/chatbot/starter-prompts).
+
+## Initial state
+
+The widget starts closed by default.
+
+Use `initialOpen` when you want it to open as soon as the component mounts:
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  initialOpen
+/>
+```
+
+This only controls the initial state. Users can still open and close the chatbot normally.
+
+## Customization
+
+The component supports several ways to customize the interface.
+
+### Theme
+
+Use the `theme` prop to customize the chatbot's colors.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  theme={{
+    primaryColor: "#18181b",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#18181b",
+  }}
+/>
+```
+
+You can also provide separate light and dark theme values.
+
+See [Themes](/docs/chatbot/themes) for the complete theme API.
+
+### Custom classes
+
+Use `classNames` when you need to add your own classes to specific parts of the chatbot.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  classNames={{
+    wrapper: "my-chatbot",
+    trigger: "my-trigger",
+    window: "my-window",
+    header: "my-header",
+  }}
+/>
+```
+
+See [Customization](/docs/chatbot/customization) for more ways to adapt the component to your application.
+
+### Custom icons
+
+The trigger, send, and close buttons accept React nodes, so you can replace their default icons.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  triggerIcon={<MyChatIcon />}
+  sendIcon={<MySendIcon />}
+  closeIcon={<MyCloseIcon />}
+/>
+```
+
+## Compound components
+
+The standard `Chatbot` component gives you a complete chatbot interface.
+
+When you need control over the individual pieces of the interface, `react-ai-chat` also provides compound components:
+
+```tsx
+<Chatbot.Root>
+  <Chatbot.Trigger />
+  <Chatbot.Window>
+    <Chatbot.Header />
+    <Chatbot.Messages />
+    <Chatbot.Input />
+  </Chatbot.Window>
+</Chatbot.Root>
+```
+
+The compound API lets you control the structure of the chatbot instead of using the default monolithic component.
+
+See [Compound Components](/docs/chatbot/compound-components) for the full API.
+
+## Theme mode
+
+The chatbot supports automatic, light, and dark theme modes.
+
+```tsx
+<Chatbot
+  apiEndpoint="/api/chat"
+  themeMode="dark"
+/>
+```
+
+Available values:
+
+```text
+auto
+light
+dark
+```
+
+`auto` is the default and follows the system preference.
+
+For custom light and dark color tokens, see [Themes](/docs/chatbot/themes).
+
+## What's next?
+
+<Cards>
+  <Card
+    title="Chatbot Props"
+    description="Explore every option available on the Chatbot component."
+    href="/docs/chatbot/props"
+  />
+  <Card
+    title="Compound Components"
+    description="Build a custom chatbot layout from individual components."
+    href="/docs/chatbot/compound-components"
+  />
+  <Card
+    title="Themes"
+    description="Customize colors and light and dark theme behavior."
+    href="/docs/chatbot/themes"
+  />
+  <Card
+    title="API Route"
+    description="Configure the backend endpoint that generates your chatbot responses."
+    href="/docs/getting-started/api-route"
+  />
+</Cards>

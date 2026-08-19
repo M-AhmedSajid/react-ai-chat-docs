@@ -33,7 +33,7 @@ export default function HomePage() {
                 <ArrowRight />
               </Link>
               <Link
-                href="https://github.com/M-AhmedSajid/next-ai-chatbot"
+                href="https://github.com/M-AhmedSajid/react-ai-chat"
                 target="_blank"
                 rel="noreferrer"
                 className={buttonVariants({ variant: "outline", size: "lg" })}
@@ -46,7 +46,7 @@ export default function HomePage() {
             {/* Install */}
             <div className="mt-10 flex w-full max-w-md items-center rounded-lg border bg-muted/50 p-1.5 text-left">
               <code className="flex-1 px-3 py-2 font-mono text-sm text-muted-foreground">
-                npm install next-ai-chatbot
+                npm install react-ai-chat
               </code>
             </div>
           </div>
@@ -141,7 +141,7 @@ export default function HomePage() {
             <Package className="mx-auto size-8 text-muted-foreground" />
 
             <h2 className="mt-5 text-3xl font-semibold tracking-tight">
-              Start building with next-ai-chatbot
+              Start building with react-ai-chat
             </h2>
 
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
