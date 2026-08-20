@@ -1,7 +1,259 @@
 ---
-title: "API Route"
-description: "Optional description for your index page"
+title: API Route
+description: Create the server endpoint that connects react-ai-chat to your AI model.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# API Route
+
+`react-ai-chat` provides `createChatRoute()` for creating the server endpoint used by the chatbot.
+
+You provide an AI SDK-compatible language model, and `react-ai-chat` handles receiving the conversation and streaming the model response back to the client.
+
+## Basic setup
+
+The simplest API route looks like this:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+The exact location of the route depends on your framework.
+
+For example, with Next.js App Router:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Your `route.ts` can contain:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+Your chatbot can then use this endpoint:
+
+```tsx
+<Chatbot apiEndpoint="/api/chat" />
+```
+
+## How it works
+
+The request flows through your application like this:
+
+```text
+Chatbot
+   ↓
+/api/chat
+   ↓
+createChatRoute()
+   ↓
+AI SDK
+   ↓
+AI Model
+   ↓
+Streaming response
+   ↓
+Chatbot
+```
+
+The chatbot sends the conversation to your API route.
+
+`createChatRoute()` processes the request, sends the messages to the configured model, and returns a streamed response.
+
+## Configuration
+
+`createChatRoute()` accepts these options:
+
+| Option         | Type            | Default                             | Description                                         |
+| -------------- | --------------- | ----------------------------------- | --------------------------------------------------- |
+| `model`        | `LanguageModel` | Required                            | AI SDK-compatible language model                    |
+| `systemPrompt` | `string`        | `"You are a helpful AI assistant."` | Instructions given to the model                     |
+| `maxMessages`  | `number`        | `6`                                 | Maximum number of recent messages sent to the model |
+| `rag`          | `object`        | `undefined`                         | Optional RAG configuration                          |
+
+### Model
+
+The `model` option is required.
+
+It accepts an AI SDK-compatible language model.
+
+For example, with Google:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+You can use other AI SDK providers as long as they provide a compatible language model.
+
+## System prompt
+
+Use `systemPrompt` to define the behavior of your assistant.
+
+```tsx
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+  systemPrompt: `
+    You are a helpful assistant for my website.
+
+    Keep your answers short and easy to understand.
+    Answer questions about the products on this website.
+  `,
+});
+```
+
+The default system prompt is:
+
+```text
+You are a helpful AI assistant.
+```
+
+The system prompt is also used when RAG is enabled. Retrieved reference content is added to the system prompt automatically.
+
+## Limit conversation history
+
+Use `maxMessages` to control how many recent messages are sent to the model.
+
+```tsx
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+  maxMessages: 10,
+});
+```
+
+The default is:
+
+```text
+6
+```
+
+If a conversation contains more messages than the configured limit, only the most recent messages are used.
+
+This can help control the amount of conversation context sent to the model.
+
+## RAG
+
+You can optionally configure RAG to retrieve relevant content from an embedding index before generating a response.
+
+```tsx
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+  rag: {
+    index,
+    provider,
+    topK: 3,
+  },
+});
+```
+
+The `rag` option accepts:
+
+| Option     | Type                | Default  | Description                           |
+| ---------- | ------------------- | -------- | ------------------------------------- |
+| `index`    | `EmbeddingIndex`    | Required | Generated embedding index             |
+| `provider` | `EmbeddingProvider` | Required | Embedding provider used for queries   |
+| `topK`     | `number`            | `3`      | Number of relevant chunks to retrieve |
+
+When RAG is enabled, the latest user message is used as the retrieval query.
+
+The retrieved chunks are added to the system prompt as reference documents.
+
+The flow becomes:
+
+```text
+User question
+      ↓
+Query embedding
+      ↓
+Relevant document chunks
+      ↓
+Reference context
+      ↓
+System prompt
+      ↓
+AI model
+      ↓
+Response
+```
+
+If no RAG configuration is provided, the chatbot works as a normal AI chat.
+
+See [RAG](/docs/rag) for the complete setup.
+
+## Complete example
+
+Here is an API route with a custom system prompt and message limit:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+  systemPrompt:
+    "You are a helpful assistant for a web development documentation site.",
+  maxMessages: 8,
+});
+```
+
+## Environment variables
+
+Your AI provider usually requires an API key.
+
+For Google AI SDK:
+
+```text
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+```
+
+Keep provider API keys on the server.
+
+Do not expose them through client-side environment variables.
+
+The exact environment variable depends on the AI provider you use.
+
+## Error handling
+
+`createChatRoute()` converts errors during chat route execution into `ChatbotError` errors.
+
+For example, an invalid model can result in an error describing the model configuration problem.
+
+Your framework can then handle the returned server error according to its own error-handling system.
+
+## Next steps
+
+<Cards>
+  <Card
+    title="Chatbot UI"
+    description="Configure the chatbot interface and its available options."
+    href="/docs/getting-started/chatbot-ui"
+  />
+  <Card
+    title="RAG"
+    description="Give your chatbot access to your own documents and content."
+    href="/docs/rag"
+  />
+  <Card
+    title="Providers"
+    description="Learn about the supported embedding providers."
+    href="/docs/api/providers"
+  />
+</Cards>

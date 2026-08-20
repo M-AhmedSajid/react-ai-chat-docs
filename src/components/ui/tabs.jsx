@@ -1,81 +1,152 @@
-"use client"
+"use client";
 
-import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
-import { cva } from "class-variance-authority";
+import {
+  createContext,
+  use,
+  useEffectEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Tabs as Primitive } from "@base-ui/react/tabs";
+import { mergeRefs } from "../../lib/merge-refs";
 
-import { cn } from "@/lib/utils"
+const TabsContext = createContext(null);
 
-function Tabs({
-  className,
-  orientation = "horizontal",
+function useTabContext() {
+  const ctx = use(TabsContext);
+  if (!ctx) throw new Error("You must wrap your component in <Tabs>");
+  return ctx;
+}
+
+export const TabsList = Primitive.List;
+
+export const TabsTrigger = Primitive.Tab;
+
+export function Tabs({
+  ref,
+  groupId,
+  persist = false,
+  updateAnchor = false,
+  defaultValue,
+  value: _value,
+  onValueChange: _onValueChange,
   ...props
 }) {
+  const tabsRef = useRef < HTMLDivElement > null;
+  const valueToIdMap = useMemo(() => new Map(), []);
+  const panels = useMemo(() => new Map(), []);
+  const [value, setValue] =
+    _value === undefined
+      ? // eslint-disable-next-line react-hooks/rules-of-hooks -- not supposed to change controlled/uncontrolled
+        useState(defaultValue)
+      : // eslint-disable-next-line react-hooks/rules-of-hooks -- not supposed to change controlled/uncontrolled
+        [_value, useEffectEvent((v) => _onValueChange?.(v))];
+
+  useLayoutEffect(() => {
+    if (!groupId) return;
+    let previous = sessionStorage.getItem(groupId);
+    if (persist) previous ??= localStorage.getItem(groupId);
+    if (previous) setValue(previous);
+
+    const groupListeners = listeners.get(groupId) ?? new Set();
+    groupListeners.add(setValue);
+    listeners.set(groupId, groupListeners);
+    return () => {
+      groupListeners.delete(setValue);
+    };
+  }, [groupId, persist, setValue]);
+
+  useLayoutEffect(() => {
+    const openFromHash = () => {
+      const hash = window.location.hash.slice(1);
+      if (!hash) return;
+
+      // hash points to a tab's own anchor id
+      for (const [value, id] of valueToIdMap.entries()) {
+        if (id === hash) {
+          setValue(value);
+          tabsRef.current?.scrollIntoView();
+          return;
+        }
+      }
+
+      // hash points to an element inside a mounted (e.g. `keepMounted`) panel,
+      // open the tab it belongs to, then scroll to it once the panel is visible.
+      const target = document.getElementById(hash);
+      if (!target) return;
+
+      for (const [value, panel] of panels.entries()) {
+        if (!panel.contains(target)) continue;
+
+        setValue(value);
+        requestAnimationFrame(() => target.scrollIntoView());
+        return;
+      }
+    };
+
+    openFromHash();
+    window.addEventListener("hashchange", openFromHash);
+    return () => window.removeEventListener("hashchange", openFromHash);
+  }, [setValue, valueToIdMap, panels]);
+
   return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      data-orientation={orientation}
-      className={cn("group/tabs flex gap-2 data-horizontal:flex-col", className)}
-      {...props} />
+    <Primitive.Root
+      ref={mergeRefs(ref, tabsRef)}
+      value={value}
+      onValueChange={(v) => {
+        if (updateAnchor) {
+          const id = valueToIdMap.get(v);
+
+          if (id) {
+            window.history.replaceState(null, "", `#${id}`);
+          }
+        }
+
+        if (groupId) {
+          const groupListeners = listeners.get(groupId);
+          if (groupListeners) {
+            for (const listener of groupListeners) listener(v);
+          }
+
+          sessionStorage.setItem(groupId, v);
+          if (persist) localStorage.setItem(groupId, v);
+        } else {
+          setValue(v);
+        }
+      }}
+      {...props}
+    >
+      <TabsContext
+        value={useMemo(
+          () => ({ valueToIdMap, panels }),
+          [valueToIdMap, panels],
+        )}
+      >
+        {props.children}
+      </TabsContext>
+    </Primitive.Root>
   );
 }
 
-const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-full p-1 text-muted-foreground group-data-horizontal/tabs:h-9 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col group-data-vertical/tabs:rounded-2xl data-[variant=line]:rounded-none",
-  {
-    variants: {
-      variant: {
-        default: "bg-muted",
-        line: "gap-1 bg-transparent",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
+export function TabsContent({ value, ref, ...props }) {
+  const { valueToIdMap, panels } = useTabContext();
+
+  if (props.id) {
+    valueToIdMap.set(value, props.id);
   }
-)
 
-function TabsList({
-  className,
-  variant = "default",
-  ...props
-}) {
   return (
-    <TabsPrimitive.List
-      data-slot="tabs-list"
-      data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
-      {...props} />
+    <Primitive.Panel
+      ref={mergeRefs(ref, (element) => {
+        if (element) panels.set(value, element);
+        else panels.delete(value);
+      })}
+      value={value}
+      {...props}
+    >
+      {props.children}
+    </Primitive.Panel>
   );
 }
-
-function TabsTrigger({
-  className,
-  ...props
-}) {
-  return (
-    <TabsPrimitive.Tab
-      data-slot="tabs-trigger"
-      className={cn(
-        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-2 rounded-full border border-transparent! px-3 py-1 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start group-data-vertical/tabs:rounded-2xl group-data-vertical/tabs:px-3 group-data-vertical/tabs:py-1.5 hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 aria-disabled:pointer-events-none aria-disabled:opacity-50 dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
-        "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
-        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
-        className
-      )}
-      {...props} />
-  );
-}
-
-function TabsContent({
-  className,
-  ...props
-}) {
-  return (
-    <TabsPrimitive.Panel
-      data-slot="tabs-content"
-      className={cn("flex-1 text-sm outline-none", className)}
-      {...props} />
-  );
-}
-
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

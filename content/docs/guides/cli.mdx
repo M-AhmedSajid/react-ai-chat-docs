@@ -1,7 +1,565 @@
 ---
-title: "CLI"
-description: "Optional description for your index page"
+title: CLI
+description: Generate chatbot components and create RAG embedding indexes with the react-ai-chat CLI.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# CLI
+
+`react-ai-chat` includes a CLI for generating chatbot components and creating embedding indexes for RAG.
+
+You can run it directly with `npx`:
+
+```bash
+npx react-ai-chat
+```
+
+## Initialize a chatbot
+
+Use `init` to generate an editable chatbot implementation in your project.
+
+```bash
+npx react-ai-chat init
+```
+
+The CLI generates TypeScript React components by default.
+
+```text
+chatbot.tsx
+chatbot-header.tsx
+chatbot-messages.tsx
+chatbot-input.tsx
+chatbot.css
+```
+
+The generated components are regular files in your project. You can modify their markup, styles, and behavior without editing the package itself.
+
+### Generate JSX
+
+If your project uses JavaScript or JSX, use the `--jsx` flag:
+
+```bash
+npx react-ai-chat init --jsx
+```
+
+This generates JSX files instead of TSX files.
+
+### Choose an output directory
+
+Use `--path` to choose where the generated files should be placed.
+
+```bash
+npx react-ai-chat init --path src/components/chatbot
+```
+
+For example:
+
+```text
+src/
+└── components/
+    └── chatbot/
+        ├── chatbot.tsx
+        ├── chatbot-header.tsx
+        ├── chatbot-messages.tsx
+        ├── chatbot-input.tsx
+        └── chatbot.css
+```
+
+The path is resolved relative to your current working directory.
+
+### Overwrite generated files
+
+The CLI does not overwrite existing generated files by default.
+
+Use `--force` when you want to replace them:
+
+```bash
+npx react-ai-chat init --force
+```
+
+You can combine it with other options:
+
+```bash
+npx react-ai-chat init --jsx --path src/components/chatbot --force
+```
+
+Use `--force` carefully because existing generated files will be replaced.
+
+### Generated chatbot
+
+The generated chatbot is built from regular React components.
+
+The main component uses the package's chatbot context:
+
+```tsx
+import { ChatbotProvider } from "react-ai-chat";
+```
+
+The generated files can be changed to match your application's design.
+
+This is useful when the ready-made `<Chatbot />` component does not give you enough control over the UI.
+
+See [Generated Chatbot](/docs/guides/generated-chatbot) for details about the generated files and how to customize them.
+
+## Generate a RAG index
+
+The CLI can create an embedding index from your content.
+
+The basic command is:
+
+```bash
+npx react-ai-chat --google
+```
+
+By default, the CLI:
+
+1. Reads documents from `./content`
+2. Splits the documents into chunks
+3. Generates embeddings using the selected provider
+4. Saves the index to `./chatbot/embeddings.json`
+
+The default paths are:
+
+```text
+Content: ./content
+Output:  ./chatbot/embeddings.json
+```
+
+### Choose an embedding provider
+
+You can select a provider with its provider flag:
+
+```bash
+npx react-ai-chat --google
+```
+
+```bash
+npx react-ai-chat --openai
+```
+
+```bash
+npx react-ai-chat --voyage
+```
+
+```bash
+npx react-ai-chat --cohere
+```
+
+```bash
+npx react-ai-chat --jina
+```
+
+```bash
+npx react-ai-chat --huggingface
+```
+
+You can also use the `--provider` option:
+
+```bash
+npx react-ai-chat --provider google
+```
+
+```bash
+npx react-ai-chat --provider openai
+```
+
+```bash
+npx react-ai-chat --provider jina
+```
+
+Both forms select the same embedding provider.
+
+### Customize Paths
+
+#### Customize the content path
+
+Pass a custom content directory as the first positional argument:
+
+```bash
+npx react-ai-chat --google ./docs
+```
+
+For example:
+
+```text
+docs/
+├── getting-started.md
+├── installation.md
+└── api.md
+```
+
+The CLI will load documents from `./docs`.
+
+#### Customize the output path
+
+Pass a custom output path as the second positional argument:
+
+```bash
+npx react-ai-chat --google ./content ./data/embeddings.json
+```
+
+You can also use `--output`:
+
+```bash
+npx react-ai-chat --google --output ./data/embeddings.json
+```
+
+The short form `-o` is also supported:
+
+```bash
+npx react-ai-chat --google -o ./data/embeddings.json
+```
+
+The explicit `--output` or `-o` value takes priority over the second positional argument.
+
+#### Customize both paths
+
+Use the first and second positional arguments:
+
+```bash
+npx react-ai-chat --google ./docs ./data/embeddings.json
+```
+
+This means:
+
+```text
+Source documents → ./docs
+Embedding index  → ./data/embeddings.json
+```
+
+You can also combine a custom content path with `--output`:
+
+```bash
+npx react-ai-chat --google ./docs --output ./data/embeddings.json
+```
+
+### Provider-specific examples
+
+Google:
+
+```bash
+npx react-ai-chat --google ./docs ./chatbot/embeddings.json
+```
+
+OpenAI:
+
+```bash
+npx react-ai-chat --openai ./docs ./chatbot/embeddings.json
+```
+
+Voyage:
+
+```bash
+npx react-ai-chat --voyage ./docs ./chatbot/embeddings.json
+```
+
+Cohere:
+
+```bash
+npx react-ai-chat --cohere ./docs ./chatbot/embeddings.json
+```
+
+Jina:
+
+```bash
+npx react-ai-chat --jina ./docs ./chatbot/embeddings.json
+```
+
+Hugging Face:
+
+```bash
+npx react-ai-chat --huggingface ./docs ./chatbot/embeddings.json
+```
+
+### RAG indexing workflow
+
+The indexing process works like this:
+
+```text
+Your documents
+     ↓
+documentsPath
+     ↓
+Document loader
+     ↓
+Text chunks
+     ↓
+Embedding provider
+     ↓
+Embedding vectors
+     ↓
+outputPath
+     ↓
+embeddings.json
+```
+
+The generated index can then be used by your server-side RAG configuration.
+
+### Example project structure
+
+You can keep your documentation and generated index in separate directories:
+
+```text
+my-project/
+├── docs/
+│   ├── introduction.md
+│   ├── installation.md
+│   └── api.md
+├── chatbot/
+│   └── embeddings.json
+└── app/
+    └── api/
+        └── chat/
+            └── route.ts
+```
+
+Generate the index with:
+
+```bash
+npx react-ai-chat --google ./docs ./chatbot/embeddings.json
+```
+
+### Environment variables
+
+The selected provider requires its API key.
+
+Google:
+
+```text
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+```
+
+OpenAI:
+
+```text
+OPENAI_API_KEY=your_api_key_here
+```
+
+Voyage:
+
+```text
+VOYAGE_API_KEY=your_api_key_here
+```
+
+Cohere:
+
+```text
+COHERE_API_KEY=your_api_key_here
+```
+
+Jina:
+
+```text
+JINA_API_KEY=your_api_key_here
+```
+
+Hugging Face:
+
+```text
+HF_TOKEN=your_api_token_here
+```
+
+The CLI loads environment variables through `dotenv/config` before processing the command.
+
+## CLI help
+
+Use `--help` to see the available commands and options:
+
+```bash
+npx react-ai-chat --help
+```
+
+For the initialization command:
+
+```bash
+npx react-ai-chat init --help
+```
+
+## Common examples
+
+### Initialize a TypeScript chatbot
+
+Generate the chatbot components using TypeScript:
+
+```bash
+npx react-ai-chat init
+````
+
+### Initialize a JSX chatbot
+
+Generate JSX components instead of TSX:
+
+```bash
+npx react-ai-chat init --jsx
+```
+
+### Choose the chatbot output directory
+
+Generate the chatbot inside a custom directory:
+
+```bash
+npx react-ai-chat init --path src/components/chatbot
+```
+
+### Replace an existing chatbot
+
+Use `--force` to replace an existing generated chatbot:
+
+```bash
+npx react-ai-chat init --force
+```
+
+### Combine chatbot options
+
+Generate JSX components in a custom directory and replace existing files:
+
+```bash
+npx react-ai-chat init --jsx --path src/components/chatbot --force
+```
+
+### Generate a RAG index with Google
+
+Use the default content and output paths:
+
+```bash
+npx react-ai-chat --google
+```
+
+### Generate a RAG index with Jina
+
+```bash
+npx react-ai-chat --jina
+```
+
+### Use a custom content directory
+
+Pass the content directory as the first positional argument:
+
+```bash
+npx react-ai-chat --google ./docs
+```
+
+This reads documents from `./docs` and uses the default output path:
+
+```text
+./chatbot/embeddings.json
+```
+
+### Use a custom output path
+
+Use `--output`:
+
+```bash
+npx react-ai-chat --google --output ./data/embeddings.json
+```
+
+You can also use the short form:
+
+```bash
+npx react-ai-chat --google -o ./data/embeddings.json
+```
+
+### Use custom content and output paths
+
+Pass both paths positionally:
+
+```bash
+npx react-ai-chat --google ./docs ./data/embeddings.json
+```
+
+Or use `--output` for the output path:
+
+```bash
+npx react-ai-chat --google ./docs --output ./data/embeddings.json
+```
+
+### Use the provider option
+
+Instead of a provider flag such as `--google`, you can use `--provider`:
+
+```bash
+npx react-ai-chat --provider google
+```
+
+With custom paths:
+
+```bash
+npx react-ai-chat --provider google ./docs ./data/embeddings.json
+```
+
+### Generate indexes with different providers
+
+Google:
+
+```bash
+npx react-ai-chat --google ./docs ./data/google.json
+```
+
+OpenAI:
+
+```bash
+npx react-ai-chat --openai ./docs ./data/openai.json
+```
+
+Voyage:
+
+```bash
+npx react-ai-chat --voyage ./docs ./data/voyage.json
+```
+
+Cohere:
+
+```bash
+npx react-ai-chat --cohere ./docs ./data/cohere.json
+```
+
+Jina:
+
+```bash
+npx react-ai-chat --jina ./docs ./data/jina.json
+```
+
+Hugging Face:
+
+```bash
+npx react-ai-chat --huggingface ./docs ./data/huggingface.json
+```
+
+### Show CLI help
+
+Show the available commands and options:
+
+```bash
+npx react-ai-chat --help
+```
+
+The short form also works:
+
+```bash
+npx react-ai-chat -h
+```
+
+### Show initialization help
+
+```bash
+npx react-ai-chat init --help
+```
+
+## Next steps
+
+<Cards>
+  <Card
+    title="Generated Chatbot"
+    description="Learn what the CLI generates and how to customize the files."
+    href="/docs/guides/generated-chatbot"
+  />
+  <Card
+    title="Providers"
+    description="Configure the embedding provider used by your RAG index."
+    href="/docs/api/providers"
+  />
+  <Card
+    title="RAG"
+    description="Connect your embedding index to your chatbot."
+    href="/docs/rag"
+  />
+</Cards>

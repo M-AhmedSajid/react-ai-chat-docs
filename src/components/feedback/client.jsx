@@ -311,7 +311,7 @@ export function FeedbackText({ onSendAction, children }) {
     <>
       <div
         ref={containerRef}
-        className="prose-no-margin"
+        className="prose-no-margin highlight-fd:bg-fd-primary highlight-fd:text-fd-primary-foreground"
       >
         {children}
       </div>

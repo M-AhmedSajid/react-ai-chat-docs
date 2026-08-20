@@ -1,7 +1,374 @@
 ---
-title: "<Chatbot />"
-description: "Optional description for your index page"
+title: <Chatbot />
+description: Configure the react-ai-chat Chatbot component and its available props.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# Chatbot
+
+The `Chatbot` component provides a complete, ready-to-use chat interface.
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function MyChatbot() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+For more control over the structure of the UI, see [Generated Chatbot](/docs/guides/generated-chatbot).
+
+## Props
+
+The `Chatbot` component accepts the following props.
+
+### Content
+
+| Prop                  | Type     | Default                 | Description                                           |
+| --------------------- | -------- | ----------------------- | ----------------------------------------------------- |
+| `title`               | `string` | `"AI Assistant"`        | Title displayed in the chatbot header.                |
+| `subtitle`            | `string` | `"Ask me anything"`     | Subtitle displayed below the title.                   |
+| `triggerText`         | `string` | `"Chat"`                | Text displayed in the chatbot trigger.                |
+| `placeholder`         | `string` | `"Type a message..."`   | Placeholder displayed in the message input.           |
+| `emptyStateText`      | `string` | `"How can I help you?"` | Text displayed when the conversation has no messages. |
+| `starterPromptsLabel` | `string` | `"Try asking"`          | Label displayed above starter prompts.                |
+
+### Starter prompts
+
+Use `starterPrompts` to provide suggested questions when the conversation is empty.
+
+```tsx
+<Chatbot
+  starterPrompts={[
+    "What can you help me with?",
+    "Tell me about this project",
+    "How does this work?",
+  ]}
+/>
+```
+
+Type:
+
+```ts
+starterPrompts?: string[];
+```
+
+Selecting a starter prompt sends it as a normal chat message.
+
+### API endpoint
+
+Use `apiEndpoint` to specify the endpoint that receives chat requests.
+
+```tsx
+<Chatbot apiEndpoint="/api/chat" />
+```
+
+Type:
+
+```ts
+apiEndpoint?: string;
+```
+
+The default endpoint is:
+
+```text
+/api/chat
+```
+
+The endpoint should be backed by `createChatRoute()` or another compatible chat API.
+
+See [API Route](/docs/getting-started/api-route).
+
+### Position
+
+Use `position` to control where the chatbot appears on the screen.
+
+```tsx
+<Chatbot position="bottom-right" />
+```
+
+Available values:
+
+```ts
+type ChatbotPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+```
+
+The default is:
+
+```text
+bottom-right
+```
+
+### Initial state
+
+Use `initialOpen` to control whether the chatbot starts open.
+
+```tsx
+<Chatbot initialOpen />
+```
+
+Type:
+
+```ts
+initialOpen?: boolean;
+```
+
+The default is:
+
+```text
+false
+```
+
+### Theme mode
+
+Use `themeMode` to control the chatbot's color mode.
+
+```tsx
+<Chatbot themeMode="dark" />
+```
+
+Available values:
+
+```ts
+type ThemeMode = "auto" | "light" | "dark";
+```
+
+The default is:
+
+```text
+auto
+```
+
+`auto` follows the user's system color preference.
+
+See [Customization](/docs/guides/customization) for custom theme colors.
+
+### Icons
+
+The chatbot accepts custom React nodes for its trigger, send, and close icons.
+
+#### Trigger icon
+
+```tsx
+<Chatbot triggerIcon={<MyTriggerIcon />} />
+```
+
+Type:
+
+```ts
+triggerIcon?: ReactNode;
+```
+
+#### Send icon
+
+```tsx
+<Chatbot sendIcon={<MySendIcon />} />
+```
+
+Type:
+
+```ts
+sendIcon?: ReactNode;
+```
+
+#### Close icon
+
+```tsx
+<Chatbot closeIcon={<MyCloseIcon />} />
+```
+
+Type:
+
+```ts
+closeIcon?: ReactNode;
+```
+
+You can use your own components or icons from a library such as Lucide.
+
+### Theme
+
+Use the `theme` prop to customize the chatbot's colors.
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#18181b",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#18181b",
+    mutedBackground: "#f4f4f5",
+    mutedForeground: "#71717a",
+    borderColor: "#e4e4e7",
+  }}
+/>
+```
+
+The available theme tokens are:
+
+| Token               | Description                                |
+| ------------------- | ------------------------------------------ |
+| `primaryColor`      | Main accent color used by the chatbot.     |
+| `primaryForeground` | Foreground color used on primary elements. |
+| `background`        | Main chatbot background color.             |
+| `foreground`        | Main text color.                           |
+| `mutedBackground`   | Background color for muted UI elements.    |
+| `mutedForeground`   | Text color for secondary or muted content. |
+| `borderColor`       | Border color used throughout the chatbot.  |
+
+#### Light and dark themes
+
+You can provide separate values for light and dark modes.
+
+```tsx
+<Chatbot
+  theme={{
+    light: {
+      primaryColor: "#18181b",
+      primaryForeground: "#ffffff",
+      background: "#ffffff",
+      foreground: "#18181b",
+    },
+    dark: {
+      primaryColor: "#fafafa",
+      primaryForeground: "#18181b",
+      background: "#09090b",
+      foreground: "#fafafa",
+    },
+  }}
+/>
+```
+
+Theme values can be combined with `themeMode`.
+
+```tsx
+<Chatbot
+  themeMode="auto"
+  theme={{
+    light: {
+      background: "#ffffff",
+    },
+    dark: {
+      background: "#09090b",
+    },
+  }}
+/>
+```
+
+See [Customization](/docs/guides/customization) for more examples.
+
+### Custom classes
+
+Use `classNames` to add custom CSS classes to chatbot elements.
+
+```tsx
+<Chatbot
+  classNames={{
+    wrapper: "my-chatbot-wrapper",
+    trigger: "my-chatbot-trigger",
+    window: "my-chatbot-window",
+    header: "my-chatbot-header",
+  }}
+/>
+```
+
+Available class names include:
+
+| Key        | Description             |
+| ---------- | ----------------------- |
+| `wrapper`  | Outer chatbot wrapper.  |
+| `trigger`  | Chatbot trigger button. |
+| `window`   | Chatbot window.         |
+| `header`   | Chatbot header.         |
+
+You can use these classes to apply application-specific styling without modifying the package source.
+
+### Error handling
+
+Use `onError` to receive errors that occur while sending a message.
+
+```tsx
+<Chatbot
+  onError={(error) => {
+    console.error("Chatbot error:", error);
+  }}
+/>
+```
+
+Type:
+
+```ts
+onError?: (error: Error) => void;
+```
+
+This lets you integrate the chatbot with your own error UI, logging, or monitoring system.
+
+## Complete example
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function MyChatbot() {
+  return (
+    <Chatbot
+      title="Project Assistant"
+      subtitle="Ask questions about this project"
+      triggerText="Ask AI"
+      triggerIcon={<span>💬</span>}
+      position="bottom-right"
+      initialOpen={false}
+      themeMode="auto"
+      placeholder="Ask a question..."
+      emptyStateText="What would you like to know?"
+      starterPrompts={[
+        "What does this project do?",
+        "How do I get started?",
+        "Show me an example",
+      ]}
+      starterPromptsLabel="Try asking"
+      apiEndpoint="/api/chat"
+      theme={{
+        light: {
+          primaryColor: "#18181b",
+          primaryForeground: "#ffffff",
+        },
+        dark: {
+          primaryColor: "#fafafa",
+          primaryForeground: "#18181b",
+        },
+      }}
+      onError={(error) => {
+        console.error(error);
+      }}
+    />
+  );
+}
+```
+
+## Related
+
+<Cards>
+  <Card
+    title="Chatbot UI"
+    description="Learn how to configure and use the chatbot interface."
+    href="/docs/getting-started/chatbot-ui"
+  />
+  <Card
+    title="Customization"
+    description="Customize the chatbot's appearance and behavior."
+    href="/docs/guides/customization"
+  />
+  <Card
+    title="API Route"
+    description="Connect the chatbot to an AI SDK-compatible model."
+    href="/docs/getting-started/api-route"
+  />
+</Cards>

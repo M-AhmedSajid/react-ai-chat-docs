@@ -1,4 +1,10 @@
 {
   "title": "Guides",
-  "pages": ["customization", "system-prompt", "rag", "cli"]
+  "pages": [
+    "cli",
+    "generated-chatbot",
+    "customization",
+    "compound-components",
+    "system-prompt"
+  ]
 }
