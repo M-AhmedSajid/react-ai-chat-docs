@@ -1,4 +1,4 @@
 {
   "title": "Examples",
-  "pages": ["portfolio", "business-site", "documentation-site"]
+  "pages": ["documentation-site", "business-site", "portfolio", "custom-ui"]
 }

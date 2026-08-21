@@ -1,0 +1,679 @@
+---
+title: Types
+description: TypeScript types exported by react-ai-chat for chatbot configuration, RAG, embeddings, and themes.
+---
+
+# Types
+
+`react-ai-chat` exports TypeScript types for its client components, server APIs, embedding system, RAG configuration, and theming.
+
+You can import the types directly from the package:
+
+```tsx
+import type {
+  ChatbotProps,
+  ChatbotTheme,
+  ChatbotThemeTokens,
+  ChatRouteOptions,
+  EmbeddingProvider,
+  EmbeddingIndex,
+  EmbeddedChunk,
+  Document,
+  Chunk,
+} from "react-ai-chat";
+```
+
+The package's public types are defined in `src/types.ts`.
+
+## `EmbeddingProvider`
+
+Describes an embedding provider used by the CLI and RAG system.
+
+```ts
+interface EmbeddingProvider {
+  name: string;
+  model: string;
+
+  embed(text: string, type?: "document" | "query"): Promise<number[]>;
+}
+```
+
+### Properties
+
+| Property | Type       | Description                            |
+| -------- | ---------- | -------------------------------------- |
+| `name`   | `string`   | Name of the embedding provider.        |
+| `model`  | `string`   | Embedding model used by the provider.  |
+| `embed`  | `function` | Creates an embedding vector from text. |
+
+The `type` argument can be:
+
+```ts
+"document" | "query";
+```
+
+Use `"document"` when embedding source content and `"query"` when embedding a user's question.
+
+## `Document`
+
+Represents a source document before it is split into chunks.
+
+```ts
+interface Document {
+  id: string;
+  text: string;
+}
+```
+
+### Properties
+
+| Property | Type     | Description                         |
+| -------- | -------- | ----------------------------------- |
+| `id`     | `string` | Unique identifier for the document. |
+| `text`   | `string` | Document content.                   |
+
+## `Chunk`
+
+Represents a section of a source document.
+
+```ts
+interface Chunk {
+  id: string;
+  source: string;
+  chunk: number;
+  text: string;
+}
+```
+
+### Properties
+
+| Property | Type     | Description                         |
+| -------- | -------- | ----------------------------------- |
+| `id`     | `string` | Unique identifier for the chunk.    |
+| `source` | `string` | Source document identifier or path. |
+| `chunk`  | `number` | Chunk index within the source.      |
+| `text`   | `string` | Text contained in the chunk.        |
+
+Chunks are created when the CLI processes your source documents.
+
+## `EmbeddedChunk`
+
+Represents a document chunk together with its embedding vector.
+
+```ts
+interface EmbeddedChunk {
+  id: string;
+  source: string;
+  chunk: number;
+  text: string;
+  embedding: number[];
+}
+```
+
+### Properties
+
+| Property    | Type       | Description                         |
+| ----------- | ---------- | ----------------------------------- |
+| `id`        | `string`   | Unique chunk identifier.            |
+| `source`    | `string`   | Source document identifier or path. |
+| `chunk`     | `number`   | Chunk index.                        |
+| `text`      | `string`   | Chunk content.                      |
+| `embedding` | `number[]` | Vector representation of the chunk. |
+
+These objects are stored inside an `EmbeddingIndex`.
+
+## `EmbeddingIndex`
+
+Represents the complete embedding index generated from your content.
+
+```ts
+interface EmbeddingIndex {
+  provider: string;
+  model: string;
+  dimensions: number;
+  chunks: EmbeddedChunk[];
+}
+```
+
+### Properties
+
+| Property     | Type              | Description                                    |
+| ------------ | ----------------- | ---------------------------------------------- |
+| `provider`   | `string`          | Name of the embedding provider.                |
+| `model`      | `string`          | Embedding model used to create the index.      |
+| `dimensions` | `number`          | Number of dimensions in each embedding vector. |
+| `chunks`     | `EmbeddedChunk[]` | Embedded document chunks.                      |
+
+The CLI generates an index containing this structure.
+
+You can pass the index to `createChatRoute()`:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+  rag: {
+    index,
+    provider,
+  },
+});
+```
+
+See [RAG](/docs/guides/rag).
+
+## `CreateIndexOptions`
+
+Defines the options used when creating an embedding index.
+
+```ts
+interface CreateIndexOptions {
+  provider: EmbeddingProvider;
+  documentsPath?: string;
+  outputPath?: string;
+}
+```
+
+### Properties
+
+| Property        | Type                | Required | Description                                  |
+| --------------- | ------------------- | -------- | -------------------------------------------- |
+| `provider`      | `EmbeddingProvider` | Yes      | Embedding provider used to create the index. |
+| `documentsPath` | `string`            | No       | Path containing the source documents.        |
+| `outputPath`    | `string`            | No       | Path where the generated index is saved.     |
+
+The CLI uses these concepts when processing your content.
+
+For example:
+
+```bash
+npx react-ai-chat --google ./docs ./data/embeddings.json
+```
+
+## `RetrieveContextOptions`
+
+Defines the options used when retrieving relevant chunks from an embedding index.
+
+```ts
+interface RetrieveContextOptions {
+  question: string;
+  embeddings: EmbeddedChunk[];
+  embedFn: (text: string) => Promise<number[]>;
+  topK?: number;
+}
+```
+
+### Properties
+
+| Property     | Type              | Description                                     |
+| ------------ | ----------------- | ----------------------------------------------- |
+| `question`   | `string`          | User question used for retrieval.               |
+| `embeddings` | `EmbeddedChunk[]` | Chunks to search.                               |
+| `embedFn`    | `function`        | Function used to create the question embedding. |
+| `topK`       | `number`          | Maximum number of chunks to retrieve.           |
+
+The server-side RAG flow uses these values when searching the embedding index.
+
+## `ChatRouteOptions`
+
+Defines the configuration accepted by `createChatRoute()`.
+
+```ts
+interface ChatRouteOptions {
+  model: LanguageModel;
+  systemPrompt?: string;
+  maxMessages?: number;
+  rag?: {
+    index: EmbeddingIndex;
+    provider: EmbeddingProvider;
+    topK?: number;
+  };
+}
+```
+
+### `model`
+
+```ts
+model: LanguageModel;
+```
+
+The AI SDK language model used to generate responses.
+
+### `systemPrompt`
+
+```ts
+systemPrompt?: string;
+```
+
+Optional system instruction for the model.
+
+### `maxMessages`
+
+```ts
+maxMessages?: number;
+```
+
+Maximum number of recent messages sent to the model.
+
+### `rag`
+
+```ts
+rag?: {
+  index: EmbeddingIndex;
+  provider: EmbeddingProvider;
+  topK?: number;
+};
+```
+
+Optional RAG configuration.
+
+See [`createChatRoute`](/docs/api/create-chat-route).
+
+## `ChatbotThemeTokens`
+
+Defines the individual theme colors used by the chatbot.
+
+```ts
+interface ChatbotThemeTokens {
+  primaryColor?: string;
+  primaryForeground?: string;
+  background?: string;
+  foreground?: string;
+  mutedBackground?: string;
+  mutedForeground?: string;
+  borderColor?: string;
+}
+```
+
+### Properties
+
+| Property            | Description                                                      |
+| ------------------- | ---------------------------------------------------------------- |
+| `primaryColor`      | Primary accent color for buttons, the header, and user messages. |
+| `primaryForeground` | Text color used on primary elements.                             |
+| `background`        | Main chatbot background.                                         |
+| `foreground`        | Main chatbot text color.                                         |
+| `mutedBackground`   | Background for bot messages, inputs, and chips.                  |
+| `mutedForeground`   | Secondary text color.                                            |
+| `borderColor`       | Border color for inputs and prompt chips.                        |
+
+Example:
+
+```tsx
+const theme = {
+  primaryColor: "#18181b",
+  primaryForeground: "#ffffff",
+  background: "#ffffff",
+  foreground: "#18181b",
+  mutedBackground: "#f4f4f5",
+  mutedForeground: "#71717a",
+  borderColor: "#e4e4e7",
+};
+```
+
+## `ChatbotTheme`
+
+Represents the complete chatbot theme.
+
+```ts
+type ChatbotTheme = ChatbotThemeTokens & {
+  light?: ChatbotThemeTokens;
+  dark?: ChatbotThemeTokens;
+};
+```
+
+You can provide flat theme tokens:
+
+```tsx
+<Chatbot theme={theme} />
+```
+
+You can also define separate light and dark overrides:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#18181b",
+    light: {
+      background: "#ffffff",
+      foreground: "#18181b",
+    },
+    dark: {
+      background: "#18181b",
+      foreground: "#fafafa",
+    },
+  }}
+/>
+```
+
+The light and dark objects use the same properties as `ChatbotThemeTokens`.
+
+See [Theming](/docs/guides/theming).
+
+## `ChatbotProps`
+
+Defines the props accepted by the `<Chatbot />` component.
+
+```ts
+interface ChatbotProps {
+  title?: string;
+  subtitle?: string;
+  triggerText?: string;
+  triggerIcon?: ReactNode;
+  sendIcon?: ReactNode;
+  closeIcon?: ReactNode;
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  starterPrompts?: string[];
+  emptyStateText?: string;
+  placeholder?: string;
+  starterPromptsLabel?: string;
+  apiEndpoint?: string;
+  initialOpen?: boolean;
+  themeMode?: "auto" | "light" | "dark";
+  classNames?: {
+    wrapper?: string;
+    trigger?: string;
+    window?: string;
+    header?: string;
+  };
+  theme?: ChatbotTheme;
+  onError?: (error: Error) => void;
+}
+```
+
+### `title`
+
+```ts
+title?: string;
+```
+
+Text displayed in the chatbot header.
+
+### `subtitle`
+
+```ts
+subtitle?: string;
+```
+
+Text displayed below the main header title.
+
+### `triggerText`
+
+```ts
+triggerText?: string;
+```
+
+Text displayed inside the floating trigger button.
+
+### `triggerIcon`
+
+```ts
+triggerIcon?: ReactNode;
+```
+
+Custom icon for the floating trigger button.
+
+```tsx
+<Chatbot triggerIcon={<MyIcon />} />
+```
+
+### `sendIcon`
+
+```ts
+sendIcon?: ReactNode;
+```
+
+Custom icon for the send button.
+
+### `closeIcon`
+
+```ts
+closeIcon?: ReactNode;
+```
+
+Custom icon for the header close button.
+
+### `position`
+
+```ts
+position?:
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+```
+
+Controls where the chatbot window appears.
+
+```tsx
+<Chatbot position="bottom-left" />
+```
+
+### `starterPrompts`
+
+```ts
+starterPrompts?: string[];
+```
+
+Prompts displayed when there are no messages.
+
+```tsx
+<Chatbot
+  starterPrompts={["What can you help me with?", "How do I get started?"]}
+/>
+```
+
+### `emptyStateText`
+
+```ts
+emptyStateText?: string;
+```
+
+Message displayed above the starter prompts.
+
+### `placeholder`
+
+```ts
+placeholder?: string;
+```
+
+Placeholder text for the chat input.
+
+### `starterPromptsLabel`
+
+```ts
+starterPromptsLabel?: string;
+```
+
+Label displayed above the starter prompt buttons.
+
+### `apiEndpoint`
+
+```ts
+apiEndpoint?: string;
+```
+
+API endpoint used by the chatbot.
+
+```tsx
+<Chatbot apiEndpoint="/api/chat" />
+```
+
+### `initialOpen`
+
+```ts
+initialOpen?: boolean;
+```
+
+Controls whether the chatbot starts open.
+
+```tsx
+<Chatbot initialOpen />
+```
+
+### `themeMode`
+
+```ts
+themeMode?: "auto" | "light" | "dark";
+```
+
+Controls the active theme mode.
+
+```tsx
+<Chatbot themeMode="dark" />
+```
+
+`auto` follows the system color preference.
+
+### `classNames`
+
+Adds custom classes to selected chatbot elements.
+
+```ts
+classNames?: {
+  wrapper?: string;
+  trigger?: string;
+  window?: string;
+  header?: string;
+};
+```
+
+Example:
+
+```tsx
+<Chatbot
+  classNames={{
+    wrapper: "my-chatbot",
+    trigger: "my-trigger",
+    window: "my-window",
+    header: "my-header",
+  }}
+/>
+```
+
+### `theme`
+
+```ts
+theme?: ChatbotTheme;
+```
+
+Provides custom theme colors.
+
+### `onError`
+
+```ts
+onError?: (error: Error) => void;
+```
+
+Called when the chatbot encounters an error.
+
+```tsx
+<Chatbot
+  onError={(error) => {
+    console.error(error);
+  }}
+/>
+```
+
+## Embedding provider options
+
+Each built-in embedding provider has its own optional model configuration.
+
+### `GoogleEmbeddingOptions`
+
+```ts
+interface GoogleEmbeddingOptions {
+  model?: string;
+}
+```
+
+### `OpenAIEmbeddingOptions`
+
+```ts
+interface OpenAIEmbeddingOptions {
+  model?: string;
+}
+```
+
+### `VoyageEmbeddingOptions`
+
+```ts
+interface VoyageEmbeddingOptions {
+  model?: string;
+}
+```
+
+### `CohereEmbeddingOptions`
+
+```ts
+interface CohereEmbeddingOptions {
+  model?: string;
+}
+```
+
+### `JinaEmbeddingOptions`
+
+```ts
+interface JinaEmbeddingOptions {
+  model?: string;
+}
+```
+
+### `HuggingFaceEmbeddingOptions`
+
+```ts
+interface HuggingFaceEmbeddingOptions {
+  model?: string;
+}
+```
+
+Each option allows you to override the default embedding model used by that provider.
+
+See [Providers](/docs/api/providers).
+
+## Import types
+
+You can import the public types from the main package:
+
+```tsx
+import type {
+  ChatbotProps,
+  ChatbotTheme,
+  ChatbotThemeTokens,
+  ChatRouteOptions,
+  CreateIndexOptions,
+  Document,
+  Chunk,
+  EmbeddedChunk,
+  EmbeddingIndex,
+  EmbeddingProvider,
+  RetrieveContextOptions,
+} from "react-ai-chat";
+```
+
+This keeps your application code aligned with the package's public API.
+
+## Related
+
+<Cards>
+  <Card
+    title="Chatbot"
+    description="Configure the ready-made chatbot component."
+    href="/docs/api/chatbot"
+  />
+  <Card
+    title="ChatbotProvider"
+    description="Provide chatbot state to your custom UI."
+    href="/docs/api/chatbot-provider"
+  />
+  <Card
+    title="createChatRoute"
+    description="Create the server-side chat API route."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="Providers"
+    description="Configure embedding providers for RAG."
+    href="/docs/api/providers"
+  />
+</Cards>

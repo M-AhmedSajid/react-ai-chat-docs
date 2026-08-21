@@ -1,4 +1,4 @@
 {
   "title": "Getting Started",
-  "pages": ["index", "quick-start", "chatbot-ui", "api-route"]
+  "pages": ["quick-start", "installation", "chatbot-ui", "api-route"]
 }

@@ -1,7 +1,616 @@
 ---
-title: "FAQ"
-description: "Optional description for your index page"
+title: FAQ
+description: Frequently asked questions about react-ai-chat, its chatbot UI, server routes, RAG, and customization.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# FAQ
+
+## What is react-ai-chat?
+
+`react-ai-chat` is a React package for adding an AI chatbot to your application.
+
+It provides:
+
+- A ready-made `<Chatbot />` component
+- `ChatbotProvider` and `useChatbotContext()` for custom UIs
+- `createChatRoute()` for server-side AI chat routes
+- RAG support with document embeddings
+- A CLI for generating chatbot files and embedding indexes
+- Built-in support for several embedding providers
+
+## Does react-ai-chat work with Next.js?
+
+Yes.
+
+The package works with React applications and can be used with Next.js.
+
+For a Next.js App Router application, your server route can look like:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+The client can then connect to that route:
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function App() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+## Does it require Next.js?
+
+No.
+
+The chatbot UI is a React component, while the server functionality is exposed separately through the `/server` entry point.
+
+This lets you use the UI in React-based applications while choosing the server environment that fits your project.
+
+Your server needs to provide an API endpoint compatible with the package's chat flow.
+
+## Do I need to build the chatbot UI myself?
+
+No.
+
+The simplest option is to use the ready-made component:
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function App() {
+  return <Chatbot />;
+}
+```
+
+If you need full control over the interface, use `ChatbotProvider` and `useChatbotContext()`.
+
+You can also generate an editable starting point with:
+
+```bash
+npx react-ai-chat init
+```
+
+See [Generated Chatbot](/docs/guides/generated-chatbot).
+
+## Can I customize the ready-made chatbot?
+
+Yes.
+
+The `<Chatbot />` component provides props for text, icons, position, starter prompts, theme, classes, and other UI options.
+
+For example:
+
+```tsx
+<Chatbot
+  title="Project Assistant"
+  subtitle="Ask me anything"
+  triggerText="Chat"
+  position="bottom-right"
+  placeholder="Ask a question..."
+/>
+```
+
+You can also customize its colors:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#7c3aed",
+    background: "#ffffff",
+  }}
+/>
+```
+
+See [Chatbot](/docs/api/chatbot) and [Theming](/docs/guides/theming).
+
+## Can I build a completely custom chatbot UI?
+
+Yes.
+
+Wrap your components in `ChatbotProvider`:
+
+```tsx
+import { ChatbotProvider } from "react-ai-chat";
+
+export function CustomChatbot() {
+  return (
+    <ChatbotProvider apiEndpoint="/api/chat">
+      <YourChatbotUI />
+    </ChatbotProvider>
+  );
+}
+```
+
+Then use `useChatbotContext()` inside your components:
+
+```tsx
+import { useChatbotContext } from "react-ai-chat";
+
+function ChatInput() {
+  const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={input} onChange={(event) => setInput(event.target.value)} />
+
+      <button type="submit" disabled={isLoading}>
+        Send
+      </button>
+    </form>
+  );
+}
+```
+
+See [useChatbotContext](/docs/api/use-chatbot-context).
+
+## How do I create the API route?
+
+Use `createChatRoute()` from the server entry point:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+The `model` is an AI SDK `LanguageModel`.
+
+See [createChatRoute](/docs/api/create-chat-route).
+
+## Where does the AI model run?
+
+The model runs on your server.
+
+Your client sends chat messages to your API endpoint. The API route calls the configured model and streams the response back to the client.
+
+Keep your model credentials and API keys on the server.
+
+## Which AI models are supported?
+
+`createChatRoute()` accepts an AI SDK `LanguageModel`.
+
+That means the model choice is handled through the AI SDK provider you use in your application.
+
+For example:
+
+```tsx
+import { google } from "@ai-sdk/google";
+
+const model = google("gemini-3.5-flash");
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+The exact model and provider depend on the AI SDK provider packages installed in your application.
+
+## Does react-ai-chat provide the AI model?
+
+The package provides the chatbot infrastructure. You provide the model.
+
+For example:
+
+```tsx
+createChatRoute({
+  model,
+});
+```
+
+This keeps the model provider configurable instead of tying the chatbot to one AI provider.
+
+## Does react-ai-chat support RAG?
+
+Yes.
+
+RAG is available through `createChatRoute()`.
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  rag: {
+    index,
+    provider,
+    topK: 3,
+  },
+});
+```
+
+The CLI can generate the embedding index:
+
+```bash
+npx react-ai-chat --google
+```
+
+The server then embeds the user's question, searches the index, and provides relevant context to the model.
+
+See [RAG](/docs/guides/rag).
+
+## What embedding providers are supported?
+
+The CLI supports:
+
+- Google
+- OpenAI
+- Voyage
+- Cohere
+- Jina
+- Hugging Face
+
+For example:
+
+```bash
+npx react-ai-chat --google
+```
+
+or:
+
+```bash
+npx react-ai-chat --openai
+```
+
+See [Providers](/docs/api/providers).
+
+## Can I use a different embedding provider for RAG?
+
+The embedding provider used to query the index should be compatible with the provider used to generate that index.
+
+For example, if you create an index with:
+
+```bash
+npx react-ai-chat --google
+```
+
+use the corresponding Google embedding provider when retrieving context.
+
+Mixing unrelated embedding models can produce incompatible vectors and poor retrieval results.
+
+## How do I generate an embedding index?
+
+Place your source documents inside a content directory:
+
+```text
+content/
+├── getting-started.md
+├── configuration.md
+└── faq.md
+```
+
+Then run:
+
+```bash
+npx react-ai-chat --google
+```
+
+The default output is:
+
+```text
+chatbot/embeddings.json
+```
+
+You can choose custom paths:
+
+```bash
+npx react-ai-chat --google ./docs ./data/embeddings.json
+```
+
+See [CLI](/docs/guides/cli).
+
+## Does the embedding index update automatically?
+
+No.
+
+The index is generated from your source documents at the time you run the CLI.
+
+After changing your content, regenerate it:
+
+```bash
+npx react-ai-chat --google
+```
+
+For production applications, run the indexing step as part of your content publishing or deployment workflow when appropriate.
+
+## Where should I store my embedding index?
+
+The embedding index is used by your server, so it should remain server-side.
+
+For example:
+
+```text
+chatbot/
+└── embeddings.json
+```
+
+Load it from your server route and pass it to `createChatRoute()`.
+
+Do not expose the index through a public client-side route unless you have a specific reason to do so.
+
+## How many documents can I use?
+
+The package does not impose a fixed document count limit at the chatbot API level.
+
+The practical limit depends on your embedding provider, document size, generated index size, server resources, and retrieval requirements.
+
+For a large documentation collection, consider how often you regenerate the index and where you store it.
+
+## What does `topK` do?
+
+`topK` controls the maximum number of relevant chunks retrieved for a question.
+
+```tsx
+rag: {
+  index,
+  provider,
+  topK: 3,
+}
+```
+
+A smaller value keeps the retrieved context focused.
+
+A larger value can provide more information when an answer depends on several document sections.
+
+The default is `3`.
+
+## How many messages are sent to the model?
+
+`createChatRoute()` uses the `maxMessages` option to limit conversation history.
+
+```tsx
+createChatRoute({
+  model,
+  maxMessages: 10,
+});
+```
+
+The default is `6`.
+
+The route keeps the most recent messages before sending them to the model.
+
+## How do I change the chatbot's theme?
+
+Use the `theme` prop:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#7c3aed",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#18181b",
+  }}
+/>
+```
+
+You can also define separate light and dark values:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#7c3aed",
+    light: {
+      background: "#ffffff",
+      foreground: "#18181b",
+    },
+    dark: {
+      background: "#18181b",
+      foreground: "#fafafa",
+    },
+  }}
+/>
+```
+
+See [Theming](/docs/guides/theming).
+
+## Does it support dark mode?
+
+Yes.
+
+Use:
+
+```tsx
+<Chatbot themeMode="dark" />
+```
+
+for a fixed dark theme.
+
+Use:
+
+```tsx
+<Chatbot themeMode="light" />
+```
+
+for a fixed light theme.
+
+Use:
+
+```tsx
+<Chatbot themeMode="auto" />
+```
+
+to follow the user's system preference.
+
+## Can I use my own icons?
+
+Yes.
+
+The chatbot accepts custom React nodes for the trigger, send, and close icons:
+
+```tsx
+<Chatbot
+  triggerIcon={<MyTriggerIcon />}
+  sendIcon={<MySendIcon />}
+  closeIcon={<MyCloseIcon />}
+/>
+```
+
+## Can I customize the chatbot with Tailwind CSS?
+
+Yes.
+
+The `classNames` prop lets you attach your own classes to selected chatbot elements:
+
+```tsx
+<Chatbot
+  classNames={{
+    wrapper: "my-wrapper",
+    trigger: "my-trigger",
+    window: "my-window",
+    header: "my-header",
+  }}
+/>
+```
+
+You can also use CSS variables from the theme system.
+
+See [Theming](/docs/guides/theming).
+
+## Can I use shadcn/ui colors?
+
+Yes.
+
+You can connect the chatbot theme to your application's existing CSS variables:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "var(--primary)",
+    primaryForeground: "var(--primary-foreground)",
+    background: "var(--background)",
+    foreground: "var(--foreground)",
+    mutedBackground: "var(--muted)",
+    mutedForeground: "var(--muted-foreground)",
+    borderColor: "var(--border)",
+  }}
+/>
+```
+
+This lets the chatbot use the same color tokens as your application.
+
+## What happens if I use `useChatbotContext()` outside the provider?
+
+The hook must be used inside `ChatbotProvider`.
+
+This is invalid:
+
+```tsx
+function MyComponent() {
+  const { messages } = useChatbotContext();
+
+  return <div>{messages.length}</div>;
+}
+```
+
+Wrap the component with the provider:
+
+```tsx
+<ChatbotProvider>
+  <MyComponent />
+</ChatbotProvider>
+```
+
+Otherwise, the hook throws an error indicating that it must be used within a `ChatbotProvider`.
+
+## Can I use the generated chatbot without the `<Chatbot />` component?
+
+Yes.
+
+The CLI-generated files are editable React source files. They use the package's provider and context APIs instead of hiding the entire UI inside the package.
+
+Generate them with:
+
+```bash
+npx react-ai-chat init
+```
+
+Then modify the generated components to fit your application.
+
+See [Generated Chatbot](/docs/guides/generated-chatbot).
+
+## Can I generate JSX instead of TypeScript?
+
+Yes.
+
+Use:
+
+```bash
+npx react-ai-chat init --jsx
+```
+
+You can also choose the output directory:
+
+```bash
+npx react-ai-chat init --jsx --path src/components/chatbot
+```
+
+## How do I overwrite generated files?
+
+The CLI protects existing files by default.
+
+Use `--force` when you want to replace them:
+
+```bash
+npx react-ai-chat init --force
+```
+
+Be careful when using this because your local changes to generated files can be overwritten.
+
+## Where can I report a bug?
+
+Open an issue in the project's GitHub repository with:
+
+- A clear description of the problem
+- The package version
+- Your framework and relevant versions
+- The smallest reproduction you can provide
+- Any relevant error output
+
+Including these details makes the problem much easier to reproduce and investigate.
+
+## Where can I find the API reference?
+
+The API documentation is organized under [API Reference](/docs/api).
+
+You can find documentation for:
+
+- [`Chatbot`](/docs/api/chatbot)
+- [`ChatbotProvider`](/docs/api/chatbot-provider)
+- [`useChatbotContext`](/docs/api/use-chatbot-context)
+- [`createChatRoute`](/docs/api/create-chat-route)
+- [Embedding Providers](/docs/api/providers)
+- [Types](/docs/api/types)
+
+## Where should I start?
+
+For a new project, start with [Installation](/docs/getting-started/installation), then follow [Quick Start](/docs/getting-started/quick-start).
+
+If you want to build a custom interface, read [Customization](/docs/guides/customization) and [useChatbotContext](/docs/api/use-chatbot-context).
+
+For document-based answers, continue with [RAG](/docs/guides/rag).
+
+<Cards>
+  <Card
+    title="Quick Start"
+    description="Get a chatbot running in your project."
+    href="/docs/getting-started/quick-start"
+  />
+  <Card
+    title="Customization"
+    description="Customize the chatbot interface and behavior."
+    href="/docs/guides/customization"
+  />
+  <Card
+    title="RAG"
+    description="Connect your own documents to the chatbot."
+    href="/docs/guides/rag"
+  />
+</Cards>

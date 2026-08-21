@@ -1,7 +1,453 @@
 ---
-title: "Business Site"
-description: "Optional description for your index page"
+title: Business Site
+description: Add an AI assistant to a business website so visitors can quickly find information about your services, products, pricing, and policies.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# Business Site
+
+An AI assistant can make a business website easier to explore.
+
+Visitors can ask questions about your services, pricing, availability, policies, contact information, and other business details without searching through multiple pages.
+
+`react-ai-chat` can use your business content as its knowledge base with RAG.
+
+## What we're building
+
+This example uses:
+
+- `Chatbot` for the visitor-facing UI
+- `createChatRoute()` for the server-side API route
+- RAG for retrieving relevant business information
+- An embedding provider for indexing your content
+
+The flow looks like this:
+
+```text
+Business content
+       ↓
+Embedding index
+       ↓
+createChatRoute()
+       ↓
+Retrieve relevant information
+       ↓
+Generate response
+       ↓
+Chatbot
+```
+
+## Example use cases
+
+A business chatbot can answer questions such as:
+
+```text
+What services do you offer?
+How much does this service cost?
+What are your business hours?
+Where are you located?
+How can I contact you?
+Do you offer custom packages?
+What is your cancellation policy?
+How long does delivery take?
+```
+
+The exact questions depend on the information your business provides.
+
+<Steps>
+<Step>
+## 1. Prepare your business content
+
+Create a directory containing the information you want the chatbot to know.
+
+For example:
+
+```text
+content/
+├── about.md
+├── services.md
+├── pricing.md
+├── faq.md
+├── policies.md
+├── contact.md
+└── locations.md
+```
+
+Keep each document focused on a specific topic.
+
+For example:
+
+```md
+# Web Development
+
+We build custom websites and web applications for businesses.
+
+## Services
+
+- Business websites
+- E-commerce websites
+- Custom web applications
+- Website maintenance
+
+## Process
+
+Projects start with a discovery call followed by planning, design, development, testing, and deployment.
+```
+
+The chatbot can retrieve this information when a visitor asks a related question.
+
+</Step>
+
+<Step>
+## 2. Generate the embedding index
+
+Use the CLI to create an embedding index from your business content.
+
+For Google:
+
+```bash
+npx react-ai-chat --google ./content ./chatbot/embeddings.json
+```
+
+Other supported providers include:
+
+```bash
+npx react-ai-chat --openai ./content ./chatbot/embeddings.json
+npx react-ai-chat --voyage ./content ./chatbot/embeddings.json
+npx react-ai-chat --cohere ./content ./chatbot/embeddings.json
+npx react-ai-chat --jina ./content ./chatbot/embeddings.json
+npx react-ai-chat --huggingface ./content ./chatbot/embeddings.json
+```
+
+The generated index contains the embeddings used to find relevant business information.
+
+</Step>
+
+<Step>
+## 3. Configure the chat route
+
+Create an API route for your chatbot.
+
+With Next.js App Router:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Configure `createChatRoute()`:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+
+import embeddings from "@/chatbot/embeddings.json";
+
+const model = google("gemini-2.5-flash");
+
+const embeddingProvider = googleEmbedding();
+
+export const POST = createChatRoute({
+  model,
+
+  systemPrompt: `
+    You are the AI assistant for our business.
+
+    Answer questions using the provided business information.
+    Be helpful and concise.
+
+    If the requested information is not available,
+    tell the visitor that you do not have that information.
+    Do not invent prices, policies, services, availability,
+    or other business details.
+  `,
+
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+Use the embedding provider configuration required by your selected provider.
+
+Keep provider credentials on the server.
+
+</Step>
+
+<Step>
+## 4. Add the chatbot
+
+Render the chatbot on your website:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function BusinessChatbot() {
+  return (
+    <Chatbot
+      title="How can we help?"
+      subtitle="Ask us about our services"
+      placeholder="Ask a question..."
+      starterPrompts={[
+        "What services do you offer?",
+        "How can I contact you?",
+        "What are your business hours?",
+      ]}
+      apiEndpoint="/api/chat"
+      themeMode="auto"
+    />
+  );
+}
+```
+
+The chatbot can appear as a floating assistant throughout the website or inside a dedicated support section.
+
+</Step>
+
+<Step>
+## 5. Match your brand
+
+Use the `theme` prop to match your business website's visual identity:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#2563eb",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#111827",
+    mutedBackground: "#f3f4f6",
+    mutedForeground: "#6b7280",
+    borderColor: "#e5e7eb",
+  }}
+/>
+```
+
+For a website with dark mode:
+
+```tsx
+<Chatbot
+  themeMode="auto"
+  theme={{
+    primaryColor: "#2563eb",
+    primaryForeground: "#ffffff",
+
+    light: {
+      background: "#ffffff",
+      foreground: "#111827",
+      mutedBackground: "#f3f4f6",
+      mutedForeground: "#6b7280",
+      borderColor: "#e5e7eb",
+    },
+
+    dark: {
+      background: "#111827",
+      foreground: "#f9fafb",
+      mutedBackground: "#1f2937",
+      mutedForeground: "#9ca3af",
+      borderColor: "#374151",
+    },
+  }}
+/>
+```
+
+See [Theming](/docs/guides/theming) for more options.
+
+</Step>
+
+<Step>
+## 6. Give the assistant clear instructions
+
+A business assistant should have clear boundaries.
+
+For example:
+
+```tsx
+systemPrompt: `
+  You are the customer support assistant for Acme.
+
+  Use the provided business information to answer questions.
+
+  You can help visitors with:
+  - Services
+  - Pricing
+  - Business hours
+  - Locations
+  - Policies
+  - Contact information
+
+  Only provide information supported by the provided references.
+
+  If information is unavailable, tell the visitor that
+  you do not have enough information to answer.
+
+  Never invent prices, discounts, availability, or policies.
+`,
+```
+
+This is especially important for information such as pricing and availability. Your source content should remain the authority.
+
+</Step>
+
+<Step>
+## 7. Organize information for better answers
+
+A useful business knowledge base might look like:
+
+```text
+content/
+├── about.md
+├── services/
+│   ├── web-development.md
+│   ├── consulting.md
+│   └── maintenance.md
+├── pricing.md
+├── faq.md
+├── policies/
+│   ├── refunds.md
+│   └── cancellations.md
+├── locations.md
+└── contact.md
+```
+
+For each service, include details that visitors are likely to ask about:
+
+```text
+Service name
+Description
+What's included
+Pricing
+Duration
+Requirements
+Process
+Frequently asked questions
+```
+
+This gives retrieval enough relevant context to answer specific questions.
+
+</Step>
+
+<Step>
+## 8. Control the retrieved context
+
+Use `topK` to control how many relevant chunks are retrieved:
+
+```tsx
+rag: {
+  index: embeddings,
+  provider: embeddingProvider,
+  topK: 3,
+},
+```
+
+The default is `3`.
+
+A smaller value keeps the context focused. A larger value can help when a question requires information from several parts of your business documentation.
+
+</Step>
+</Steps>
+
+## Keep business information current
+
+Your embedding index represents the content available when it was generated.
+
+When you change important information, regenerate it:
+
+```bash
+npx react-ai-chat --google ./content ./chatbot/embeddings.json
+```
+
+This matters especially for:
+
+- Pricing
+- Services
+- Business hours
+- Locations
+- Policies
+- Contact information
+
+A chatbot should not be allowed to answer from outdated business information.
+
+## Recommended project structure
+
+A Next.js business website could look like:
+
+```text
+business-site/
+├── app/
+│   └── api/
+│       └── chat/
+│           └── route.ts
+│
+├── chatbot/
+│   └── embeddings.json
+│
+├── content/
+│   ├── about.md
+│   ├── services/
+│   ├── pricing.md
+│   ├── faq.md
+│   ├── policies/
+│   ├── locations.md
+│   └── contact.md
+│
+└── package.json
+```
+
+Keep the source content separate from the generated embedding index.
+
+## Complete client example
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function BusinessChatbot() {
+  return (
+    <Chatbot
+      title="How can we help?"
+      subtitle="Ask us anything about our business"
+      placeholder="Ask a question..."
+      starterPrompts={[
+        "What services do you offer?",
+        "How much does it cost?",
+        "What are your business hours?",
+      ]}
+      apiEndpoint="/api/chat"
+      themeMode="auto"
+      theme={{
+        primaryColor: "#2563eb",
+        primaryForeground: "#ffffff",
+      }}
+    />
+  );
+}
+```
+
+The client handles the interface while the server handles the model and RAG configuration.
+
+<Cards>
+  <Card
+    title="RAG"
+    description="Learn how to connect your own content to the chatbot."
+    href="/docs/guides/rag"
+  />
+  <Card
+    title="createChatRoute"
+    description="Configure the server-side AI chat route."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="Theming"
+    description="Match the chatbot to your business website."
+    href="/docs/guides/theming"
+  />
+</Cards>

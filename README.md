@@ -221,7 +221,7 @@ Supported embedding providers include:
 * Jina
 * Hugging Face
 
-See the [RAG](https://react-ai-chat-docs.vercel.app/docs/rag) guide for the complete workflow.
+See the [RAG](https://react-ai-chat-docs.vercel.app/docs/guides/rag) guide for the complete workflow.
 
 ## Providers
 

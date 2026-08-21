@@ -1,0 +1,600 @@
+---
+title: Custom UI
+description: Build a completely custom chatbot interface with ChatbotProvider and useChatbotContext.
+---
+
+# Custom UI
+
+The ready-made `<Chatbot />` component is useful when you want a complete chatbot interface with minimal setup.
+
+When you need full control over the interface, use `ChatbotProvider` with `useChatbotContext()`.
+
+This lets you build your own message list, input, buttons, loading states, and other UI while `react-ai-chat` handles the chatbot state and communication.
+
+## What we're building
+
+The custom UI uses:
+
+- `ChatbotProvider` to provide chatbot state
+- `useChatbotContext()` to access that state
+- Your own React components for the interface
+- `createChatRoute()` for the server-side AI endpoint
+
+The architecture looks like this:
+
+```text
+Your UI
+   ↓
+useChatbotContext()
+   ↓
+ChatbotProvider
+   ↓
+/api/chat
+   ↓
+AI model
+```
+
+## Basic setup
+
+Start by wrapping your custom chatbot with `ChatbotProvider`:
+
+```tsx
+"use client";
+
+import { ChatbotProvider } from "react-ai-chat";
+
+export default function CustomChatbot() {
+  return (
+    <ChatbotProvider apiEndpoint="/api/chat">
+      <YourChatbotUI />
+    </ChatbotProvider>
+  );
+}
+```
+
+Any component inside the provider can use `useChatbotContext()`.
+
+## Access chatbot state
+
+Create a component that reads the conversation:
+
+```tsx
+"use client";
+
+import { useChatbotContext } from "react-ai-chat";
+
+export function MessageList() {
+  const { messages } = useChatbotContext();
+
+  return (
+    <div>
+      {messages.map((message) => (
+        <div key={message.id}>{message.content}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+The context keeps your UI connected to the current conversation.
+
+## Build a custom input
+
+You can use the context to control the input value and submit messages:
+
+```tsx
+"use client";
+
+import { useChatbotContext } from "react-ai-chat";
+
+export function ChatInput() {
+  const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        placeholder="Ask a question..."
+      />
+
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? "Thinking..." : "Send"}
+      </button>
+    </form>
+  );
+}
+```
+
+You can replace the native elements with your own design system components.
+
+## Build a complete custom chatbot
+
+A simple custom interface can be split into separate components:
+
+```text
+components/
+└── chatbot/
+    ├── chatbot.tsx
+    ├── message-list.tsx
+    ├── message.tsx
+    └── chat-input.tsx
+```
+
+The root component provides the context:
+
+```tsx
+"use client";
+
+import { ChatbotProvider } from "react-ai-chat";
+
+import { MessageList } from "./message-list";
+import { ChatInput } from "./chat-input";
+
+export function Chatbot() {
+  return (
+    <ChatbotProvider apiEndpoint="/api/chat">
+      <div className="flex h-[600px] flex-col">
+        <MessageList />
+        <ChatInput />
+      </div>
+    </ChatbotProvider>
+  );
+}
+```
+
+Your UI remains completely under your control.
+
+## Display messages
+
+Render messages based on their role:
+
+```tsx
+"use client";
+
+import { useChatbotContext } from "react-ai-chat";
+
+export function MessageList() {
+  const { messages } = useChatbotContext();
+
+  return (
+    <div>
+      {messages.map((message) => (
+        <div key={message.id}>
+          <strong>{message.role === "user" ? "You" : "Assistant"}</strong>
+
+          <p>{message.content}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+You can style user and assistant messages differently:
+
+```tsx
+{
+  messages.map((message) => (
+    <div
+      key={message.id}
+      className={
+        message.role === "user"
+          ? "ml-auto max-w-[80%] rounded-lg p-3"
+          : "mr-auto max-w-[80%] rounded-lg p-3"
+      }
+    >
+      {message.content}
+    </div>
+  ));
+}
+```
+
+## Handle loading state
+
+Use `isLoading` to show feedback while the assistant is generating a response:
+
+```tsx
+const { isLoading } = useChatbotContext();
+
+return <div>{isLoading && <p>Thinking...</p>}</div>;
+```
+
+You can replace this with a spinner, typing indicator, skeleton, or any other UI.
+
+## Disable controls while loading
+
+Use the same state to prevent duplicate submissions:
+
+```tsx
+const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
+
+return (
+  <form onSubmit={handleSubmit}>
+    <input
+      value={input}
+      onChange={(event) => setInput(event.target.value)}
+      disabled={isLoading}
+    />
+
+    <button type="submit" disabled={isLoading || !input.trim()}>
+      Send
+    </button>
+  </form>
+);
+```
+
+## Clear the conversation
+
+Use the context's conversation controls when you want to provide a reset button.
+
+```tsx
+"use client";
+
+import { useChatbotContext } from "react-ai-chat";
+
+export function ClearChatButton() {
+  const { clearMessages } = useChatbotContext();
+
+  return <button onClick={clearMessages}>New chat</button>;
+}
+```
+
+This can be useful for a "New conversation" action in your custom header.
+
+## Use starter prompts
+
+You can build your own prompt buttons instead of using the default chatbot UI.
+
+```tsx
+"use client";
+
+import { useChatbotContext } from "react-ai-chat";
+
+const prompts = [
+  "How does authentication work?",
+  "How do I customize the chatbot?",
+  "Show me a quick start example.",
+];
+
+export function StarterPrompts() {
+  const { setInput, handleSubmit } = useChatbotContext();
+
+  function selectPrompt(prompt: string) {
+    setInput(prompt);
+  }
+
+  return (
+    <div>
+      {prompts.map((prompt) => (
+        <button key={prompt} onClick={() => selectPrompt(prompt)}>
+          {prompt}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+You can decide whether clicking a prompt should populate the input or submit it immediately.
+
+## Custom header
+
+Because the UI is yours, the header can contain anything you need:
+
+```tsx
+export function ChatHeader() {
+  return (
+    <header className="flex items-center justify-between border-b p-4">
+      <div>
+        <h2>Docs Assistant</h2>
+        <p>Ask about our documentation</p>
+      </div>
+
+      <ClearChatButton />
+    </header>
+  );
+}
+```
+
+## Custom message components
+
+You can create a dedicated component for messages:
+
+```tsx
+type MessageProps = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export function Message({ role, content }: MessageProps) {
+  return (
+    <article>
+      <span>{role === "user" ? "You" : "Assistant"}</span>
+
+      <p>{content}</p>
+    </article>
+  );
+}
+```
+
+Then use it in the message list:
+
+```tsx
+export function MessageList() {
+  const { messages } = useChatbotContext();
+
+  return (
+    <div>
+      {messages.map((message) => (
+        <Message
+          key={message.id}
+          role={message.role}
+          content={message.content}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+This is useful when you want to add avatars, timestamps, markdown rendering, citations, actions, or other UI around messages.
+
+## Markdown responses
+
+If your application needs formatted AI responses, you can pass the message content to a Markdown renderer.
+
+For example:
+
+```tsx
+import ReactMarkdown from "react-markdown";
+
+function MessageContent({ content }: { content: string }) {
+  return <ReactMarkdown>{content}</ReactMarkdown>;
+}
+```
+
+Then:
+
+```tsx
+<MessageContent content={message.content} />
+```
+
+The Markdown renderer is separate from `react-ai-chat`, so you can choose the library that fits your application.
+
+## Custom styling
+
+Since the interface is yours, you can use Tailwind CSS:
+
+```tsx
+<div className="flex h-[600px] flex-col rounded-xl border">
+  <header className="border-b p-4">
+    <h2 className="font-semibold">AI Assistant</h2>
+  </header>
+
+  <MessageList />
+
+  <ChatInput />
+</div>
+```
+
+You can also use CSS modules, CSS-in-JS, plain CSS, or your existing component library.
+
+## Using your design system
+
+Custom UIs work well with existing component libraries.
+
+For example:
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+import { useChatbotContext } from "react-ai-chat";
+
+export function ChatInput() {
+  const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-2">
+      <Input
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        placeholder="Ask something..."
+      />
+
+      <Button type="submit" disabled={isLoading}>
+        Send
+      </Button>
+    </form>
+  );
+}
+```
+
+This approach lets your chatbot use the same components as the rest of your application.
+
+## Theming a custom UI
+
+`ChatbotProvider` accepts the same theme system used by the ready-made chatbot.
+
+```tsx
+<ChatbotProvider
+  theme={{
+    primaryColor: "#7c3aed",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#18181b",
+    mutedBackground: "#f4f4f5",
+    mutedForeground: "#71717a",
+    borderColor: "#e4e4e7",
+  }}
+>
+  <YourChatbotUI />
+</ChatbotProvider>
+```
+
+Use `useChatbotContext()` to access the generated theme styles:
+
+```tsx
+const { themeStyles } = useChatbotContext();
+
+return (
+  <div style={themeStyles}>
+    <YourChatbotUI />
+  </div>
+);
+```
+
+The theme values are exposed as CSS custom properties, so your custom CSS can use them:
+
+```css
+.custom-chatbot {
+  background: var(--cb-bg);
+  color: var(--cb-fg);
+  border-color: var(--cb-border);
+}
+```
+
+See [Theming](/docs/guides/theming).
+
+## Connect the custom UI to your API route
+
+Your provider needs the endpoint that handles the conversation:
+
+```tsx
+<ChatbotProvider apiEndpoint="/api/chat">
+  <YourChatbotUI />
+</ChatbotProvider>
+```
+
+The server route can be created with:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+The client and server are separate. Your custom UI controls the presentation while the route handles the AI request.
+
+## Add RAG
+
+Custom UI works with RAG in the same way as the ready-made chatbot.
+
+Configure retrieval on the server:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+Your custom interface does not need to know how retrieval works. It continues sending messages through the configured API endpoint.
+
+See [RAG](/docs/guides/rag).
+
+## Complete example
+
+Here is a small custom chatbot built with the context API:
+
+```tsx
+"use client";
+
+import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
+
+function ChatbotUI() {
+  const { messages, input, setInput, handleSubmit, isLoading, clearMessages } =
+    useChatbotContext();
+
+  return (
+    <div className="flex h-[600px] flex-col rounded-xl border">
+      <header className="flex items-center justify-between border-b p-4">
+        <div>
+          <h2 className="font-semibold">AI Assistant</h2>
+          <p className="text-sm opacity-70">Ask me anything</p>
+        </div>
+
+        <button onClick={clearMessages}>New chat</button>
+      </header>
+
+      <main className="flex-1 space-y-4 overflow-y-auto p-4">
+        {messages.map((message) => (
+          <div key={message.id}>
+            <strong>{message.role === "user" ? "You" : "Assistant"}</strong>
+
+            <p>{message.content}</p>
+          </div>
+        ))}
+
+        {isLoading && <p>Thinking...</p>}
+      </main>
+
+      <form onSubmit={handleSubmit} className="flex gap-2 border-t p-4">
+        <input
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          placeholder="Ask a question..."
+          disabled={isLoading}
+          className="flex-1 rounded-md border px-3 py-2"
+        />
+
+        <button type="submit" disabled={isLoading || !input.trim()}>
+          Send
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default function CustomChatbot() {
+  return (
+    <ChatbotProvider apiEndpoint="/api/chat">
+      <ChatbotUI />
+    </ChatbotProvider>
+  );
+}
+```
+
+This gives you the core pieces needed to build a completely custom interface while keeping the chatbot state and API communication inside `react-ai-chat`.
+
+## When should you use a custom UI?
+
+A custom UI makes sense when your chatbot needs to fit deeply into your application.
+
+Common examples include:
+
+- A chatbot embedded inside a dashboard
+- A documentation assistant integrated into the page layout
+- A customer support interface
+- A portfolio assistant with custom project cards
+- A shopping assistant with product-specific UI
+- A chatbot built around an existing design system
+
+For a standard floating chatbot, the ready-made [`Chatbot`](/docs/api/chatbot) component is usually the faster option.
+
+<Cards>
+  <Card
+    title="useChatbotContext"
+    description="See the context API available to custom chatbot components."
+    href="/docs/api/use-chatbot-context"
+  />
+  <Card
+    title="ChatbotProvider"
+    description="Configure the provider used by your custom chatbot UI."
+    href="/docs/api/chatbot-provider"
+  />
+  <Card
+    title="Theming"
+    description="Use theme tokens and CSS variables in your custom interface."
+    href="/docs/guides/theming"
+  />
+</Cards>

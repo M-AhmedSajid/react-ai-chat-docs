@@ -1,0 +1,559 @@
+---
+title: useChatbotContext
+description: Access chatbot state and actions when building a custom react-ai-chat UI.
+---
+
+# useChatbotContext
+
+`useChatbotContext()` gives your custom chatbot components access to the state and actions managed by `ChatbotProvider`.
+
+```tsx
+"use client";
+
+import { useChatbotContext } from "react-ai-chat";
+
+export function CustomInput() {
+  const {
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+  } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        disabled={isLoading}
+      />
+
+      <button
+        type="submit"
+        disabled={isLoading || !input.trim()}
+      >
+        Send
+      </button>
+    </form>
+  );
+}
+```
+
+The hook must be used inside a `ChatbotProvider`.
+
+```tsx
+<ChatbotProvider>
+  <CustomInput />
+</ChatbotProvider>
+```
+
+If you call it outside the provider, it throws an error.
+
+## Return values
+
+`useChatbotContext()` returns:
+
+| Value          | Type                                     | Description                                                 |
+| -------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| `isOpen`       | `boolean`                                | Whether the chatbot is currently open.                      |
+| `setIsOpen`    | `(open: boolean) => void`                | Opens or closes the chatbot.                                |
+| `input`        | `string`                                 | Current input value.                                        |
+| `setInput`     | `(input: string) => void`                | Updates the input value.                                    |
+| `messages`     | AI SDK messages                          | Messages in the current conversation.                       |
+| `status`       | AI SDK status                            | Current status of the chat request.                         |
+| `isLoading`    | `boolean`                                | Whether a message is currently being submitted or streamed. |
+| `handleSubmit` | `(event?, customText?) => Promise<void>` | Sends a message.                                            |
+| `position`     | `ChatbotPosition`                        | Configured chatbot position.                                |
+| `themeMode`    | `ThemeMode`                              | Configured theme mode.                                      |
+| `themeStyles`  | `CSSProperties`                          | Theme values converted into CSS custom properties.          |
+
+## `isOpen`
+
+Returns whether the chatbot is open.
+
+```tsx
+const { isOpen } = useChatbotContext();
+
+return <p>{isOpen ? "Chat is open" : "Chat is closed"}</p>;
+```
+
+Use this value to conditionally render your chatbot UI.
+
+## `setIsOpen`
+
+Controls the open state.
+
+```tsx
+const { setIsOpen } = useChatbotContext();
+
+return (
+  <button onClick={() => setIsOpen(true)}>
+    Open chat
+  </button>
+);
+```
+
+Close the chatbot with:
+
+```tsx
+setIsOpen(false);
+```
+
+A custom trigger can use the same function:
+
+```tsx
+function ChatbotTrigger() {
+  const { isOpen, setIsOpen } = useChatbotContext();
+
+  return (
+    <button onClick={() => setIsOpen(!isOpen)}>
+      {isOpen ? "Close" : "Ask AI"}
+    </button>
+  );
+}
+```
+
+## `input`
+
+Contains the current value of the chatbot input.
+
+```tsx
+const { input } = useChatbotContext();
+
+console.log(input);
+```
+
+## `setInput`
+
+Updates the input value.
+
+```tsx
+const { input, setInput } = useChatbotContext();
+
+return (
+  <input
+    value={input}
+    onChange={(event) => setInput(event.target.value)}
+  />
+);
+```
+
+The input state is controlled by the provider.
+
+## `messages`
+
+Contains the messages in the current conversation.
+
+```tsx
+const { messages } = useChatbotContext();
+
+return (
+  <div>
+    {messages.map((message) => (
+      <div key={message.id}>
+        {message.parts.map((part, index) => {
+          if (part.type !== "text") return null;
+
+          return <p key={index}>{part.text}</p>;
+        })}
+      </div>
+    ))}
+  </div>
+);
+```
+
+The messages come from the AI SDK's `useChat()` hook, so their structure follows the AI SDK message format.
+
+For custom message rendering, inspect the `parts` of each message and render the types your application supports.
+
+## `status`
+
+Contains the current chat request status.
+
+```tsx
+const { status } = useChatbotContext();
+
+return <p>Status: {status}</p>;
+```
+
+The status comes from the AI SDK chat state.
+
+You can use it to build more specific UI states:
+
+```tsx
+const { status } = useChatbotContext();
+
+if (status === "submitted") {
+  return <p>Sending...</p>;
+}
+
+if (status === "streaming") {
+  return <p>Generating response...</p>;
+}
+
+return null;
+```
+
+## `isLoading`
+
+`isLoading` provides a convenient boolean for the two active request states.
+
+It is `true` while the request is being submitted or the response is streaming.
+
+```tsx
+const { isLoading } = useChatbotContext();
+
+return (
+  <button disabled={isLoading}>
+    {isLoading ? "Thinking..." : "Send"}
+  </button>
+);
+```
+
+This is useful for disabling inputs and buttons while the assistant is responding.
+
+## `handleSubmit`
+
+`handleSubmit()` sends a message through the configured chat API.
+
+It accepts an optional form event and an optional custom text value:
+
+```ts
+handleSubmit(
+  event?: SubmitEvent<HTMLFormElement>,
+  customText?: string,
+): Promise<void>
+```
+
+### Submit from a form
+
+```tsx
+function ChatInput() {
+  const {
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+  } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        disabled={isLoading}
+      />
+
+      <button
+        type="submit"
+        disabled={isLoading || !input.trim()}
+      >
+        Send
+      </button>
+    </form>
+  );
+}
+```
+
+The provider prevents the default form submission, sends the current input, and clears the input after submission begins.
+
+### Send custom text
+
+You can pass text directly:
+
+```tsx
+const { handleSubmit } = useChatbotContext();
+
+await handleSubmit(undefined, "What technologies does this project use?");
+```
+
+This is useful for custom buttons and starter prompts:
+
+```tsx
+function StarterPrompt() {
+  const { handleSubmit } = useChatbotContext();
+
+  return (
+    <button
+      onClick={() =>
+        handleSubmit(undefined, "Tell me about this project")
+      }
+    >
+      Tell me about this project
+    </button>
+  );
+}
+```
+
+Empty or whitespace-only text is ignored.
+
+## `position`
+
+Returns the position configured on `ChatbotProvider`.
+
+```tsx
+const { position } = useChatbotContext();
+
+return <div data-position={position}>...</div>;
+```
+
+Available values:
+
+```ts
+"bottom-right"
+"bottom-left"
+"top-right"
+"top-left"
+```
+
+You can use this value when your custom UI needs different styles or layouts based on its position.
+
+## `themeMode`
+
+Returns the theme mode configured on `ChatbotProvider`.
+
+```tsx
+const { themeMode } = useChatbotContext();
+
+return <div data-theme={themeMode}>...</div>;
+```
+
+Available values:
+
+```ts
+"auto"
+"light"
+"dark"
+```
+
+For example:
+
+```tsx
+function ChatbotWindow() {
+  const { themeMode } = useChatbotContext();
+
+  return (
+    <div data-theme-mode={themeMode}>
+      ...
+    </div>
+  );
+}
+```
+
+## `themeStyles`
+
+Returns the theme values as CSS custom properties.
+
+```tsx
+const { themeStyles } = useChatbotContext();
+
+return (
+  <div style={themeStyles}>
+    Your chatbot
+  </div>
+);
+```
+
+For a theme such as:
+
+```tsx
+<ChatbotProvider
+  theme={{
+    primaryColor: "#18181b",
+    background: "#ffffff",
+  }}
+>
+  <YourChatbot />
+</ChatbotProvider>
+```
+
+the provider generates CSS variables that your custom UI can use.
+
+The generated variables include names such as:
+
+```css
+--cb-primary
+--cb-bg
+--cb-fg
+--cb-muted-bg
+--cb-muted-fg
+--cb-border
+```
+
+Light and dark theme overrides use separate variable prefixes:
+
+```css
+--cb-light-primary
+--cb-light-bg
+--cb-dark-primary
+--cb-dark-bg
+```
+
+You can apply the returned styles to your chatbot root:
+
+```tsx
+function ChatbotUI() {
+  const { themeStyles } = useChatbotContext();
+
+  return (
+    <div style={themeStyles}>
+      {/* Custom chatbot UI */}
+    </div>
+  );
+}
+```
+
+The provider only creates the style values. Your custom UI decides where and how to use them.
+
+## Build a custom chatbot
+
+The hook can be combined with your own components:
+
+```tsx
+"use client";
+
+import {
+  ChatbotProvider,
+  useChatbotContext,
+} from "react-ai-chat";
+
+function ChatbotHeader() {
+  const { setIsOpen } = useChatbotContext();
+
+  return (
+    <header>
+      <h2>Project Assistant</h2>
+
+      <button onClick={() => setIsOpen(false)}>
+        Close
+      </button>
+    </header>
+  );
+}
+
+function ChatbotMessages() {
+  const { messages } = useChatbotContext();
+
+  return (
+    <div>
+      {messages.map((message) => (
+        <div key={message.id}>
+          {message.parts.map((part, index) => {
+            if (part.type !== "text") return null;
+
+            return <p key={index}>{part.text}</p>;
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChatbotInput() {
+  const {
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+  } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        disabled={isLoading}
+      />
+
+      <button
+        type="submit"
+        disabled={isLoading || !input.trim()}
+      >
+        Send
+      </button>
+    </form>
+  );
+}
+
+function ChatbotUI() {
+  return (
+    <div>
+      <ChatbotHeader />
+      <ChatbotMessages />
+      <ChatbotInput />
+    </div>
+  );
+}
+
+export function CustomChatbot() {
+  return (
+    <ChatbotProvider apiEndpoint="/api/chat">
+      <ChatbotUI />
+    </ChatbotProvider>
+  );
+}
+```
+
+This is the same basic pattern used by the generated chatbot.
+
+## Generated chatbot
+
+You can generate the starting implementation with:
+
+```bash
+npx react-ai-chat init
+```
+
+The generated components use `ChatbotProvider` and `useChatbotContext()` to build the UI.
+
+You can then modify those files directly.
+
+See [Generated Chatbot](/docs/guides/generated-chatbot).
+
+## Context requirement
+
+`useChatbotContext()` must be rendered inside a `ChatbotProvider`.
+
+This will throw an error:
+
+```tsx
+function MyComponent() {
+  const { messages } = useChatbotContext();
+
+  return <div>{messages.length}</div>;
+}
+```
+
+Place the component inside the provider:
+
+```tsx
+<ChatbotProvider>
+  <MyComponent />
+</ChatbotProvider>
+```
+
+The hook checks for the provider and throws:
+
+```text
+useChatbotContext must be used within a ChatbotProvider
+```
+
+## Related
+
+<Cards>
+  <Card
+    title="ChatbotProvider"
+    description="Provide chatbot state and configuration to your custom UI."
+    href="/docs/api/chatbot-provider"
+  />
+  <Card
+    title="Generated Chatbot"
+    description="Generate an editable chatbot UI inside your project."
+    href="/docs/guides/generated-chatbot"
+  />
+  <Card
+    title="Chatbot"
+    description="Configure the ready-made chatbot component."
+    href="/docs/api/chatbot"
+  />
+</Cards>

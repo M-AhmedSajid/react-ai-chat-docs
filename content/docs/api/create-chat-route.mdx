@@ -1,0 +1,504 @@
+---
+title: createChatRoute
+description: Create a server-side chat route with model streaming and optional RAG retrieval.
+---
+
+# createChatRoute
+
+`createChatRoute()` creates a server-side `POST` handler for your chatbot.
+
+It handles the chat request, converts the incoming messages into model messages, streams the model response, and can optionally retrieve relevant context from a RAG embedding index.
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+The function is exported from the package's server entry point:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+```
+
+## Basic usage
+
+Create a route in your framework's API directory.
+
+For a Next.js App Router application:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Then create the route:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+Your client can connect to this route with the default endpoint:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function App() {
+  return <Chatbot />;
+}
+```
+
+You can also specify the endpoint explicitly:
+
+```tsx
+<Chatbot apiEndpoint="/api/chat" />
+```
+
+See [API Route](/docs/getting-started/api-route) for framework-specific setup.
+
+## Options
+
+`createChatRoute()` accepts a `ChatRouteOptions` object.
+
+```ts
+interface ChatRouteOptions {
+  model: LanguageModel;
+  systemPrompt?: string;
+  maxMessages?: number;
+  rag?: {
+    index: EmbeddingIndex;
+    provider: EmbeddingProvider;
+    topK?: number;
+  };
+}
+```
+
+### `model`
+
+The AI SDK language model used to generate the response.
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+import { google } from "@ai-sdk/google";
+
+const model = google("gemini-3.5-flash");
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+The model must be an AI SDK `LanguageModel`.
+
+The route passes the model to the AI SDK's `streamText()` function.
+
+### `systemPrompt`
+
+Defines the system instruction sent to the model.
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  systemPrompt: "You are a helpful assistant for our documentation website.",
+});
+```
+
+The default value is:
+
+```text
+You are a helpful AI assistant.
+```
+
+When RAG is enabled and relevant context is found, the retrieved references are added after this system prompt.
+
+The route also instructs the model to base factual answers on the retrieved references and say when the references do not contain enough information.
+
+### `maxMessages`
+
+Controls how many recent messages are sent to the model.
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  maxMessages: 10,
+});
+```
+
+The default is:
+
+```text
+6
+```
+
+The route takes the most recent messages:
+
+```ts
+const recentMessages = messages.slice(-maxMessages);
+```
+
+This limits the conversation history sent to the model.
+
+The latest user message from that recent history is also used for RAG retrieval when RAG is enabled.
+
+### `rag`
+
+Adds retrieval augmented generation to the chat route.
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  rag: {
+    index,
+    provider,
+    topK: 3,
+  },
+});
+```
+
+The RAG configuration contains:
+
+| Option     | Type                | Description                                                |
+| ---------- | ------------------- | ---------------------------------------------------------- |
+| `index`    | `EmbeddingIndex`    | Generated embedding index containing your document chunks. |
+| `provider` | `EmbeddingProvider` | Provider used to create query embeddings.                  |
+| `topK`     | `number`            | Maximum number of relevant chunks to retrieve.             |
+
+The default `topK` value is `3`.
+
+See [RAG](/docs/guides/rag) for the complete RAG workflow.
+
+#### `index`
+
+The embedding index created from your documents.
+
+An index contains the embedding provider name, model, dimensions, and embedded document chunks:
+
+```ts
+interface EmbeddingIndex {
+  provider: string;
+  model: string;
+  dimensions: number;
+  chunks: EmbeddedChunk[];
+}
+```
+
+A chunk contains:
+
+```ts
+interface EmbeddedChunk {
+  id: string;
+  source: string;
+  chunk: number;
+  text: string;
+  embedding: number[];
+}
+```
+
+The CLI can generate this index:
+
+```bash
+npx react-ai-chat --google
+```
+
+You can then load the generated JSON on the server and pass it to `createChatRoute()`.
+
+#### `provider`
+
+The embedding provider used to create the query embedding.
+
+```tsx
+rag: {
+  index,
+  provider,
+}
+```
+
+The provider must implement:
+
+```ts
+interface EmbeddingProvider {
+  name: string;
+  model: string;
+  embed(text: string, type?: "document" | "query"): Promise<number[]>;
+}
+```
+
+The provider is called with the user's latest question using the `"query"` embedding type.
+
+Use the same compatible embedding system that was used to generate your index.
+
+See [Providers](/docs/api/providers).
+
+#### `topK`
+
+Controls the maximum number of chunks retrieved for each question.
+
+```tsx
+rag: {
+  index,
+  provider,
+  topK: 5,
+}
+```
+
+If omitted, `topK` defaults to `3`.
+
+Only the retrieved context is added to the model's system prompt.
+
+## How the request is handled
+
+When a request reaches the generated route, `createChatRoute()`:
+
+1. Reads the request body.
+2. Gets the `messages` array.
+3. Keeps the most recent `maxMessages`.
+4. Finds the latest user message.
+5. Retrieves RAG context when RAG is configured.
+6. Adds the retrieved context to the system prompt.
+7. Converts the messages for the AI SDK.
+8. Streams the model response back to the client.
+
+The route implementation uses the AI SDK's `convertToModelMessages()`, `streamText()`, and UI message stream response utilities.
+
+## Message history
+
+The route expects the request body to contain a `messages` array.
+
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "type": "text",
+          "text": "How do I install this?"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The route takes the latest messages according to `maxMessages`.
+
+```ts
+const recentMessages = messages.slice(-maxMessages);
+```
+
+The messages are then converted with the AI SDK before being sent to the model.
+
+## RAG message extraction
+
+When RAG is enabled, the route finds the latest user message and extracts its text.
+
+It supports messages where text is provided through `content` or through text parts.
+
+The extracted question is passed to the embedding provider:
+
+```text
+User message
+     ↓
+Extract text
+     ↓
+Generate query embedding
+     ↓
+Search embedding index
+     ↓
+Retrieve relevant chunks
+```
+
+If the extracted message is empty, retrieval is skipped.
+
+## Retrieved context
+
+When relevant chunks are found, their content is formatted and added to the system prompt.
+
+The model receives instructions similar to:
+
+```text
+You are provided with reference documents.
+
+Base every factual answer on these references.
+
+If the answer cannot be found in the references, clearly say you don't have enough information instead of guessing.
+
+=== REFERENCES ===
+...
+==================
+```
+
+This keeps the retrieved material separate from the user's message.
+
+## Streaming
+
+The response is streamed back to the client.
+
+```tsx
+const result = streamText({
+  model,
+  system: finalSystemPrompt,
+  messages: modelMessages,
+});
+```
+
+The resulting stream is converted into a UI message stream response for the chatbot client.
+
+This allows the assistant's response to appear progressively as it is generated.
+
+## Error handling
+
+The route handles model-related errors and wraps them in `ChatbotError`.
+
+For example, an invalid model can result in an error similar to:
+
+```text
+Invalid model specified: ...
+```
+
+Other route execution errors are reported as:
+
+```text
+Chat route execution failed: ...
+```
+
+RAG retrieval errors are logged on the server and do not prevent the chat request from continuing. If retrieval fails, the route continues using the configured `systemPrompt` without the retrieved context.
+
+This means a temporary retrieval failure does not automatically stop the model response.
+
+## Complete RAG example
+
+```tsx
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+import { GoogleGenAI } from "@google/genai";
+import { google } from "@ai-sdk/google";
+
+import embeddings from "@/chatbot/embeddings.json";
+
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+});
+
+const provider = googleEmbedding(client);
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+  systemPrompt: "You are an assistant for our documentation website.",
+  maxMessages: 8,
+  rag: {
+    index: embeddings,
+    provider,
+    topK: 3,
+  },
+});
+```
+
+Your client can then use:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function DocumentationChatbot() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+The client only communicates with the API route. The embedding index and retrieval provider stay on the server.
+
+## Without RAG
+
+RAG is optional.
+
+A standard chatbot route only needs a model:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+});
+```
+
+You can also customize the system prompt and conversation history:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  systemPrompt: "You are a helpful coding assistant.",
+  maxMessages: 12,
+});
+```
+
+## With RAG
+
+Add the `rag` option when you want answers grounded in your own documents:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  rag: {
+    index,
+    provider,
+    topK: 3,
+  },
+});
+```
+
+The rest of the route remains the same.
+
+## TypeScript types
+
+The relevant types are exported from the package:
+
+```ts
+import type {
+  ChatRouteOptions,
+  EmbeddingIndex,
+  EmbeddingProvider,
+} from "react-ai-chat";
+```
+
+The server entry point also re-exports the embedding providers.
+
+```ts
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+```
+
+See [Types](/docs/api/types) for the complete type reference.
+
+## Next steps
+
+<Cards>
+  <Card
+    title="API Route"
+    description="Set up createChatRoute in your application."
+    href="/docs/getting-started/api-route"
+  />
+  <Card
+    title="RAG"
+    description="Build an embedding index and add retrieval to your chatbot."
+    href="/docs/guides/rag"
+  />
+  <Card
+    title="Providers"
+    description="Configure the supported embedding providers."
+    href="/docs/api/providers"
+  />
+  <Card
+    title="Chatbot"
+    description="Configure the client-side chatbot component."
+    href="/docs/api/chatbot"
+  />
+</Cards>

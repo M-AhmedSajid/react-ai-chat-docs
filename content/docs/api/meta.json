@@ -1,4 +1,11 @@
 {
   "title": "API Reference",
-  "pages": ["chatbot", "providers"]
+  "pages": [
+    "chatbot",
+    "chatbot-provider",
+    "use-chatbot-context",
+    "providers",
+    "create-chat-route",
+    "types"
+  ]
 }

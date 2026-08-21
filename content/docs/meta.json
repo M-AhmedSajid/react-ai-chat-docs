@@ -1,10 +1,4 @@
 {
-  "pages": [
-    "index",
-    "getting-started",
-    "guides",
-    "api",
-    "examples",
-    "more"
-  ]
+  "title": "Documentation",
+  "pages": ["index", "getting-started", "guides", "api", "examples", "more"]
 }

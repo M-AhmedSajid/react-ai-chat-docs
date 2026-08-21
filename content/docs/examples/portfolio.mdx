@@ -1,7 +1,412 @@
 ---
-title: "Portfolio"
-description: "Optional description for your index page"
+title: Portfolio
+description: Add an AI assistant to your personal portfolio so visitors can ask questions about your work, skills, projects, and experience.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# Portfolio
+
+A portfolio chatbot can help visitors explore your work without searching through every section of your website.
+
+You can use `react-ai-chat` to build an assistant that knows about your projects, skills, experience, services, and other information you want visitors to discover.
+
+## Live example
+
+This portfolio uses an AI chatbot to help visitors learn more about the developer and their work.
+
+You can try it directly on the portfolio:
+
+[Try the live demo](https://ahmed-sajid.vercel.app)
+
+The chatbot can be used to answer questions such as:
+
+- What projects has Ahmed built?
+- What technologies does he work with?
+- What services does he offer?
+- What is his experience?
+- Which project is built with a particular technology?
+
+The chatbot can use your portfolio content as its knowledge base through RAG.
+
+## What we're building
+
+The setup uses:
+
+- `Chatbot` for the visitor-facing UI
+- `createChatRoute()` for the server-side chat endpoint
+- RAG for retrieving relevant portfolio content
+- An embedding provider for indexing the portfolio data
+
+The flow looks like this:
+
+```text
+Portfolio content
+       ↓
+Embedding index
+       ↓
+createChatRoute()
+       ↓
+Retrieve relevant information
+       ↓
+Generate response
+       ↓
+Chatbot
+```
+
+<Steps>
+<Step>
+## 1. Prepare your portfolio content
+
+Create a directory containing the information you want the assistant to know.
+
+For example:
+
+```text
+content/
+├── about.md
+├── skills.md
+├── experience.md
+├── services.md
+├── projects/
+│   ├── project-one.md
+│   ├── project-two.md
+│   └── project-three.md
+└── contact.md
+```
+
+Keep each document focused on a specific topic.
+
+For example:
+
+```md
+# Project One
+
+Project One is a full-stack e-commerce application built with Next.js.
+
+## Technologies
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Stripe
+- MongoDB
+
+## Features
+
+- Authentication
+- Product filtering
+- Shopping cart
+- Stripe checkout
+- Order management
+```
+
+The more useful information you provide in these documents, the more useful the chatbot becomes.
+
+</Step>
+
+<Step>
+## 2. Generate the embedding index
+
+Use the CLI to process your portfolio content.
+
+For example:
+
+```bash
+npx react-ai-chat --google ./content ./chatbot/embeddings.json
+```
+
+You can replace Google with another supported embedding provider:
+
+```bash
+npx react-ai-chat --openai ./content ./chatbot/embeddings.json
+```
+
+This creates an embedding index that the server can search when a visitor asks a question.
+
+</Step>
+
+<Step>
+## 3. Configure the embedding provider
+
+Create the embedding provider on the server.
+
+For Google:
+
+```tsx
+import { GoogleGenAI } from "@google/genai";
+import { googleEmbedding } from "react-ai-chat/server";
+
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+const embeddingProvider = googleEmbedding(client);
+```
+
+Keep the API key on the server.
+
+</Step>
+
+<Step>
+## 4. Create the chat route
+
+Create an API route for the portfolio chatbot.
+
+With Next.js App Router:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Then configure `createChatRoute()`:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { GoogleGenAI } from "@google/genai";
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+
+import embeddings from "@/chatbot/embeddings.json";
+
+const model = google("gemini-2.5-flash");
+
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+const embeddingProvider = googleEmbedding(client);
+
+export const POST = createChatRoute({
+  model,
+
+  systemPrompt: `
+    You are the AI assistant for Ahmed's portfolio.
+
+    Answer questions using the provided portfolio references.
+    Help visitors understand Ahmed's projects, skills,
+    experience, and services.
+
+    If the requested information is not available
+    in the references, say that you don't have enough
+    information instead of guessing.
+  `,
+
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+The system prompt gives the model context about its role, while RAG provides the relevant portfolio information for each question.
+
+</Step>
+
+<Step>
+## 5. Add the chatbot
+
+Render the chatbot on your portfolio:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function PortfolioChatbot() {
+  return (
+    <Chatbot
+      title="Portfolio Assistant"
+      subtitle="Ask me about my work"
+      placeholder="Ask about my projects..."
+      starterPrompts={[
+        "What projects have you built?",
+        "What technologies do you use?",
+        "What services do you offer?",
+      ]}
+      apiEndpoint="/api/chat"
+      themeMode="auto"
+    />
+  );
+}
+```
+
+The chatbot can live in a floating button, a dedicated section, or a custom interface.
+
+</Step>
+
+<Step>
+## 6. Match your portfolio design
+
+Use the `theme` prop to match the chatbot to your portfolio:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#18181b",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#18181b",
+    mutedBackground: "#f4f4f5",
+    mutedForeground: "#71717a",
+    borderColor: "#e4e4e7",
+  }}
+/>
+```
+
+For a portfolio that supports dark mode:
+
+```tsx
+<Chatbot
+  themeMode="auto"
+  theme={{
+    primaryColor: "#ffffff",
+    primaryForeground: "#18181b",
+
+    light: {
+      background: "#ffffff",
+      foreground: "#18181b",
+      mutedBackground: "#f4f4f5",
+      mutedForeground: "#71717a",
+      borderColor: "#e4e4e7",
+    },
+
+    dark: {
+      background: "#09090b",
+      foreground: "#fafafa",
+      mutedBackground: "#18181b",
+      mutedForeground: "#a1a1aa",
+      borderColor: "#27272a",
+    },
+  }}
+/>
+```
+
+See [Theming](/docs/guides/theming) for more customization options.
+
+</Step>
+
+<Step>
+## 7. Give the assistant useful portfolio context
+
+Your content should cover the questions visitors are likely to ask.
+
+Useful sections include:
+
+```text
+About
+Skills
+Experience
+Projects
+Services
+Education
+Contact
+```
+
+For projects, include information such as:
+
+```text
+Project name
+Description
+Technologies
+Features
+Your role
+Challenges
+Results
+Live URL
+Source code
+```
+
+This gives the retrieval system enough context to answer project-specific questions.
+
+</Step>
+</Steps>
+
+## Keep portfolio content up to date
+
+The embedding index is generated from your source content.
+
+When you update your portfolio information, regenerate the index:
+
+```bash
+npx react-ai-chat --google ./content ./chatbot/embeddings.json
+```
+
+For a deployed portfolio, you can include this step in your deployment process.
+
+## Complete example
+
+A simple portfolio chatbot can use the following client configuration:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function PortfolioChatbot() {
+  return (
+    <Chatbot
+      title="Portfolio Assistant"
+      subtitle="Ask me about my work"
+      placeholder="Ask about my projects..."
+      starterPrompts={[
+        "What projects have you built?",
+        "What technologies do you use?",
+        "What services do you offer?",
+      ]}
+      apiEndpoint="/api/chat"
+      themeMode="auto"
+    />
+  );
+}
+```
+
+The server handles the model and RAG configuration, while the client only renders the chatbot.
+
+## Recommended project structure
+
+A Next.js portfolio could look like:
+
+```text
+portfolio/
+├── app/
+│   └── api/
+│       └── chat/
+│           └── route.ts
+│
+├── chatbot/
+│   └── embeddings.json
+│
+├── content/
+│   ├── about.md
+│   ├── skills.md
+│   ├── experience.md
+│   ├── services.md
+│   ├── projects/
+│   └── contact.md
+│
+└── package.json
+```
+
+Keep the source content editable and regenerate the embedding index whenever that content changes.
+
+<Cards>
+  <Card
+    title="RAG"
+    description="Learn how to add your own content as chatbot knowledge."
+    href="/docs/guides/rag"
+  />
+  <Card
+    title="createChatRoute"
+    description="Configure the server-side AI chat route."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="Theming"
+    description="Match the chatbot to your portfolio design."
+    href="/docs/guides/theming"
+  />
+</Cards>

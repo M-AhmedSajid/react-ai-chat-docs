@@ -1,7 +1,519 @@
 ---
-title: "Documentation Site"
-description: "Optional description for your index page"
+title: Documentation Site
+description: Build a documentation chatbot that answers questions using your project's own documentation.
 ---
 
-# Welcome to my documentation
-Your markdown/MDX content goes here...
+# Documentation Site
+
+A documentation chatbot is one of the most useful ways to use `react-ai-chat`.
+
+Instead of sending every question directly to a language model, you can index your documentation and retrieve relevant sections before generating an answer.
+
+The result looks like this:
+
+```text
+User question
+      ↓
+Chatbot UI
+      ↓
+/api/chat
+      ↓
+Retrieve relevant documentation
+      ↓
+Send context + question to model
+      ↓
+Stream answer
+```
+
+## What we're building
+
+This example uses:
+
+- `Chatbot` for the UI
+- `createChatRoute()` for the server route
+- RAG for documentation retrieval
+- An embedding provider for indexing and searching your docs
+
+The final client can be as simple as:
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export default function DocumentationChatbot() {
+  return (
+    <Chatbot
+      title="Docs Assistant"
+      subtitle="Ask about our documentation"
+      placeholder="Ask a question..."
+      starterPrompts={[
+        "How do I get started?",
+        "How does authentication work?",
+        "How can I customize the UI?",
+      ]}
+      apiEndpoint="/api/chat"
+    />
+  );
+}
+```
+
+## Live example
+
+This documentation site uses `react-ai-chat` to power its AI assistant.
+
+You can try it directly from the chatbot button on this page. The assistant uses the project's documentation as its knowledge base, so you can ask questions about installation, configuration, the API, RAG, customization, and other parts of `react-ai-chat`.
+
+The setup follows the same approach described in this guide:
+
+```text
+Documentation
+      ↓
+Embedding index
+      ↓
+createChatRoute()
+      ↓
+RAG retrieval
+      ↓
+AI response
+```
+
+### Source code
+
+The complete documentation site is available on GitHub:
+
+[react-ai-chat-docs on GitHub](https://github.com/M-AhmedSajid/react-ai-chat-docs?utm_source=chatgpt.com)
+
+You can use it as a reference when setting up `react-ai-chat` for your own documentation site.
+
+<Steps>
+<Step>
+## 1. Organize your documentation
+
+Keep your documentation in a directory that can be processed by the CLI.
+
+For example:
+
+```text
+docs/
+├── getting-started/
+│   ├── installation.md
+│   └── quick-start.md
+├── guides/
+│   ├── configuration.md
+│   └── customization.md
+├── api/
+│   ├── components.md
+│   └── hooks.md
+└── faq.md
+```
+
+Your source files should contain the information you want the chatbot to answer questions about.
+
+For example:
+
+```md
+# Installation
+
+Install the package with:
+
+npm install react-ai-chat
+
+Then import the Chatbot component and its stylesheet.
+```
+
+</Step>
+
+<Step>
+## 2. Generate the embedding index
+
+Choose an embedding provider and run the CLI.
+
+For Google:
+
+```bash
+npx react-ai-chat --google
+```
+
+You can also use the other supported providers:
+
+```bash
+npx react-ai-chat --openai
+npx react-ai-chat --voyage
+npx react-ai-chat --cohere
+npx react-ai-chat --jina
+npx react-ai-chat --huggingface
+```
+
+The CLI processes your documentation, creates chunks, generates embeddings, and writes the resulting index.
+
+You can also specify custom input and output paths:
+
+```bash
+npx react-ai-chat --google ./docs ./chatbot/embeddings.json
+```
+
+Your project can then contain:
+
+```text
+chatbot/
+└── embeddings.json
+```
+
+</Step>
+
+<Step>
+## 3. Configure the embedding provider
+
+The server needs the same compatible embedding provider used to create the index.
+
+For example, with Google:
+
+```tsx
+import { GoogleGenAI } from "@google/genai";
+import { googleEmbedding } from "react-ai-chat/server";
+
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+const embeddingProvider = googleEmbedding(client);
+```
+
+Keep the API key on the server.
+
+</Step>
+
+<Step>
+## 4. Create the chat route
+
+Create an API route for the chatbot.
+
+With Next.js App Router:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Then configure `createChatRoute()`:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { GoogleGenAI } from "@google/genai";
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+
+import embeddings from "@/chatbot/embeddings.json";
+
+const model = google("gemini-2.5-flash");
+
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+const embeddingProvider = googleEmbedding(client);
+
+export const POST = createChatRoute({
+  model,
+  systemPrompt: "You are a helpful assistant for our documentation website.",
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+The route retrieves relevant documentation before generating the response.
+
+</Step>
+
+<Step>
+## 5. Add the chatbot
+
+Render the chatbot wherever you want it to appear:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export default function DocumentationChatbot() {
+  return (
+    <Chatbot
+      title="Docs Assistant"
+      subtitle="Ask about our documentation"
+      placeholder="Ask a question..."
+      starterPrompts={[
+        "How do I install the package?",
+        "How do I customize the chatbot?",
+        "How does RAG work?",
+      ]}
+      apiEndpoint="/api/chat"
+    />
+  );
+}
+```
+
+The `apiEndpoint` must match the route you created.
+
+</Step>
+
+<Step>
+## 6. Customize the appearance
+
+Documentation sites usually already have their own design system.
+
+You can connect the chatbot to your existing colors:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "var(--primary)",
+    primaryForeground: "var(--primary-foreground)",
+    background: "var(--background)",
+    foreground: "var(--foreground)",
+    mutedBackground: "var(--muted)",
+    mutedForeground: "var(--muted-foreground)",
+    borderColor: "var(--border)",
+  }}
+/>
+```
+
+You can also support the user's system theme:
+
+```tsx
+<Chatbot
+  themeMode="auto"
+  theme={{
+    light: {
+      background: "#ffffff",
+      foreground: "#18181b",
+    },
+    dark: {
+      background: "#18181b",
+      foreground: "#fafafa",
+    },
+  }}
+/>
+```
+
+See [Theming](/docs/guides/theming) for the complete theme API.
+
+</Step>
+
+<Step>
+## 7. Keep the index up to date
+
+The embedding index represents the documentation at the time it was generated.
+
+When you change your documentation, regenerate the index:
+
+```bash
+npx react-ai-chat --google
+```
+
+For a production documentation site, add this step to the workflow that publishes your documentation.
+
+For example:
+
+```text
+Documentation updated
+        ↓
+Generate embeddings
+        ↓
+Deploy documentation
+        ↓
+Deploy updated embedding index
+```
+
+This keeps the chatbot's retrieved context aligned with the published docs.
+
+</Step>
+</Steps>
+
+## Controlling retrieved context
+
+Use `topK` to control how many relevant chunks are passed to the model:
+
+```tsx
+rag: {
+  index: embeddings,
+  provider: embeddingProvider,
+  topK: 5,
+}
+```
+
+The default is `3`.
+
+Start with a small value and increase it when answers need information spread across several sections.
+
+## Limit conversation history
+
+Documentation questions usually do not need a large conversation history.
+
+You can limit the number of messages sent to the model:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  maxMessages: 8,
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+The default is `6`.
+
+## Add documentation-specific instructions
+
+Use `systemPrompt` to define how the assistant should behave:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  systemPrompt: `
+    You are the documentation assistant for our project.
+
+    Answer questions using the provided documentation references.
+    Keep answers concise and include code examples when useful.
+    If the documentation does not contain enough information,
+    say so instead of guessing.
+  `,
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+The retrieved references are added to the system context when relevant content is found.
+
+## Recommended project structure
+
+A Next.js project can look like this:
+
+```text
+my-docs/
+├── app/
+│   └── api/
+│       └── chat/
+│           └── route.ts
+│
+├── chatbot/
+│   └── embeddings.json
+│
+├── docs/
+│   ├── getting-started/
+│   ├── guides/
+│   ├── api/
+│   └── faq.md
+│
+└── package.json
+```
+
+Your documentation source stays separate from the generated embedding index.
+
+The index stays on the server side.
+
+## Complete example
+
+Here is the complete server route:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { GoogleGenAI } from "@google/genai";
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+
+import embeddings from "@/chatbot/embeddings.json";
+
+const model = google("gemini-2.5-flash");
+
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+const embeddingProvider = googleEmbedding(client);
+
+export const POST = createChatRoute({
+  model,
+
+  systemPrompt: `
+    You are a helpful documentation assistant.
+    Answer using the provided documentation references.
+    If the answer cannot be found in the references,
+    clearly say that you do not have enough information.
+  `,
+
+  maxMessages: 8,
+
+  rag: {
+    index: embeddings,
+    provider: embeddingProvider,
+    topK: 3,
+  },
+});
+```
+
+And the client:
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export default function DocumentationChatbot() {
+  return (
+    <Chatbot
+      title="Docs Assistant"
+      subtitle="Ask about our documentation"
+      placeholder="Ask a question..."
+      starterPrompts={[
+        "How do I get started?",
+        "How do I customize the chatbot?",
+        "How does RAG work?",
+      ]}
+      apiEndpoint="/api/chat"
+      themeMode="auto"
+    />
+  );
+}
+```
+
+## When this setup works well
+
+A documentation chatbot is a good fit when your users repeatedly search through:
+
+- API references
+- Installation guides
+- Configuration docs
+- Tutorials
+- FAQs
+- Product documentation
+
+The quality of the answers depends heavily on the quality of the indexed content. Keep documentation structured, current, and specific.
+
+<Cards>
+  <Card
+    title="RAG"
+    description="Learn how document retrieval works in react-ai-chat."
+    href="/docs/guides/rag"
+  />
+  <Card
+    title="createChatRoute"
+    description="Configure the server-side chat route."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="Theming"
+    description="Match the chatbot to your documentation site's design."
+    href="/docs/guides/theming"
+  />
+</Cards>

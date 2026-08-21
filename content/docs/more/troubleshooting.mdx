@@ -1,0 +1,620 @@
+---
+title: Troubleshooting
+description: Fix common setup, configuration, CLI, chatbot, API route, and RAG issues in react-ai-chat.
+---
+
+# Troubleshooting
+
+This page covers common problems you may run into while setting up or using `react-ai-chat`.
+
+## Chatbot styles are missing
+
+Make sure you import the package stylesheet:
+
+```tsx
+import "react-ai-chat/style.css";
+```
+
+For example:
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function App() {
+  return <Chatbot />;
+}
+```
+
+Without the stylesheet, the component's markup will render without the package's default styles.
+
+## The chatbot does not open
+
+Check that you are rendering the component correctly:
+
+```tsx
+<Chatbot />
+```
+
+If you are using a custom trigger, make sure the component is still mounted and that your custom trigger is being rendered correctly.
+
+You can also test with the default trigger first:
+
+```tsx
+<Chatbot />
+```
+
+If the default trigger works, the problem is likely in your custom trigger or surrounding styles.
+
+## The chatbot opens but messages are not sent
+
+Check the API endpoint.
+
+The chatbot expects a server endpoint that accepts the chat request.
+
+For example:
+
+```tsx
+<Chatbot apiEndpoint="/api/chat" />
+```
+
+Then make sure the corresponding server route exists:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+with:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+Open your browser's Network tab and check the request to the chat endpoint.
+
+A `404` usually means the endpoint path does not match your server route.
+
+## The API route returns an error
+
+Check the server console first.
+
+A basic route should look like:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+Make sure `model` is a valid AI SDK `LanguageModel`.
+
+For example:
+
+```tsx
+import { google } from "@ai-sdk/google";
+
+const model = google("gemini-3.5-flash");
+```
+
+Then:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+});
+```
+
+Also verify that the required AI provider package is installed and its API key is available to the server.
+
+## My API key is undefined
+
+API keys must be available to the server-side code.
+
+For example, if your provider expects:
+
+```text
+GOOGLE_GENERATIVE_AI_API_KEY
+```
+
+make sure it is defined in your environment:
+
+```text
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key
+```
+
+Restart your development server after changing environment variables.
+
+Do not expose private API keys through client-side environment variables.
+
+## The model is not responding
+
+Check these areas:
+
+1. The model provider package is installed.
+2. The API key is configured.
+3. The model name is valid for that provider.
+4. The API route is being reached.
+5. The server console does not contain an authentication or provider error.
+
+Start by testing the route without RAG:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+});
+```
+
+If this works, add your RAG configuration afterward.
+
+This helps separate model configuration problems from retrieval problems.
+
+## RAG is not returning relevant results
+
+Check that the embedding index and query provider are compatible.
+
+Your route might look like:
+
+```tsx
+export const POST = createChatRoute({
+  model,
+  rag: {
+    index,
+    provider,
+    topK: 3,
+  },
+});
+```
+
+The provider used to create the embedding index should match the provider used to create query embeddings.
+
+For example, an index generated with Google's embedding model should be queried with the compatible Google embedding provider.
+
+Using incompatible embedding models can produce poor similarity results.
+
+## RAG works but the answers are missing information
+
+Check your source documents first.
+
+The model can only use information that makes it into the retrieved context.
+
+Try increasing `topK`:
+
+```tsx
+rag: {
+  index,
+  provider,
+  topK: 5,
+}
+```
+
+The default is `3`.
+
+You should also check the size and quality of your source chunks. Very small chunks can lose context, while very large chunks can make retrieval less focused.
+
+## RAG stopped working after changing documents
+
+Regenerate the embedding index.
+
+The index is generated from your source documents, so changing those documents does not automatically update an existing index.
+
+Run your indexing command again:
+
+```bash
+npx react-ai-chat --google
+```
+
+If you use another provider, select the corresponding CLI option:
+
+```bash
+npx react-ai-chat --openai
+```
+
+Then make sure your application is loading the newly generated index.
+
+## The CLI says an embedding provider is required
+
+If you run:
+
+```bash
+npx react-ai-chat
+```
+
+without a provider, the CLI cannot know which embedding service should generate your index.
+
+Specify one:
+
+```bash
+npx react-ai-chat --google
+```
+
+Other supported provider flags include:
+
+```text
+--openai
+--voyage
+--cohere
+--jina
+--huggingface
+```
+
+## The CLI cannot find my documents
+
+Check the input path you pass to the CLI.
+
+For example:
+
+```bash
+npx react-ai-chat --google ./docs ./data/embeddings.json
+```
+
+Make sure `./docs` exists and contains supported source files.
+
+If you are using the default paths, run the command from the root of your project.
+
+## The CLI generated files in the wrong location
+
+Use the `--path` option with `init`:
+
+```bash
+npx react-ai-chat init --path src/components/chatbot
+```
+
+For JSX output:
+
+```bash
+npx react-ai-chat init --jsx --path src/components/chatbot
+```
+
+The path is relative to your current project directory.
+
+## The CLI refuses to overwrite a file
+
+The `init` command avoids overwriting existing files by default.
+
+If you intentionally want to replace generated files, use:
+
+```bash
+npx react-ai-chat init --force
+```
+
+Review your existing changes before using `--force`, since generated files may contain modifications you want to keep.
+
+## The generated chatbot does not work
+
+After running:
+
+```bash
+npx react-ai-chat init
+```
+
+check the generated imports and make sure the package is installed in the application.
+
+Also check whether your generated files are using the correct API endpoint.
+
+If the generated UI calls:
+
+```text
+/api/chat
+```
+
+you still need to create the corresponding server route.
+
+For Next.js:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+## `useChatbotContext()` throws an error
+
+`useChatbotContext()` must be called inside a `ChatbotProvider`.
+
+This will fail:
+
+```tsx
+function MyChatbot() {
+  const chatbot = useChatbotContext();
+
+  return <div />;
+}
+```
+
+Wrap the component:
+
+```tsx
+<ChatbotProvider>
+  <MyChatbot />
+</ChatbotProvider>
+```
+
+For example:
+
+```tsx
+import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
+
+function MyChatbot() {
+  const { messages } = useChatbotContext();
+
+  return <div>{messages.length} messages</div>;
+}
+
+export function App() {
+  return (
+    <ChatbotProvider>
+      <MyChatbot />
+    </ChatbotProvider>
+  );
+}
+```
+
+## My custom chatbot has no theme styles
+
+If you are building a custom UI with `ChatbotProvider`, make sure you pass the theme through the provider when you need custom theme values.
+
+```tsx
+<ChatbotProvider
+  theme={{
+    primaryColor: "#7c3aed",
+    background: "#ffffff",
+  }}
+>
+  <MyChatbot />
+</ChatbotProvider>
+```
+
+You can access the generated theme styles through the context:
+
+```tsx
+const { themeStyles } = useChatbotContext();
+```
+
+Then apply them to your custom UI:
+
+```tsx
+<div style={themeStyles}>
+  <MyChatbot />
+</div>
+```
+
+See [Theming](/docs/guides/theming).
+
+## My theme colors are not changing
+
+Check that the theme is passed to the correct component:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#7c3aed",
+  }}
+/>
+```
+
+If you use light and dark overrides, check the active `themeMode`:
+
+```tsx
+<Chatbot
+  themeMode="dark"
+  theme={{
+    light: {
+      background: "#ffffff",
+    },
+    dark: {
+      background: "#18181b",
+    },
+  }}
+/>
+```
+
+With `themeMode="dark"`, the dark values are active.
+
+With `themeMode="light"`, the light values are active.
+
+With `themeMode="auto"`, the active system color preference determines the mode.
+
+## My Tailwind classes are not affecting the chatbot
+
+The `classNames` prop only exposes specific component areas.
+
+For example:
+
+```tsx
+<Chatbot
+  classNames={{
+    wrapper: "my-wrapper",
+    trigger: "my-trigger",
+    window: "my-window",
+    header: "my-header",
+  }}
+/>
+```
+
+Use the supported keys rather than adding arbitrary keys.
+
+For color customization, the `theme` prop is usually a better fit:
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "var(--primary)",
+    background: "var(--background)",
+    foreground: "var(--foreground)",
+  }}
+/>
+```
+
+## My chatbot conflicts with my application's styles
+
+Start by checking global CSS rules.
+
+Selectors that target generic elements such as:
+
+```css
+button {
+  ...
+}
+
+input {
+  ...
+}
+```
+
+can affect the chatbot.
+
+Prefer scoped selectors for application-specific styles:
+
+```css
+.my-app button {
+  ...
+}
+```
+
+You can also use the chatbot's `classNames` prop to target specific areas.
+
+## The chatbot looks unstyled after a package update
+
+Make sure your import still points to the package stylesheet:
+
+```tsx
+import "react-ai-chat/style.css";
+```
+
+If you are using a generated chatbot instead of the ready-made `<Chatbot />`, check whether your generated source contains its own styles.
+
+Also restart the development server after updating the package.
+
+## TypeScript cannot find a type
+
+Import public types from the package:
+
+```tsx
+import type {
+  ChatbotProps,
+  ChatbotTheme,
+  ChatRouteOptions,
+  EmbeddingProvider,
+} from "react-ai-chat";
+```
+
+Avoid importing internal files from the package source.
+
+The public package exports are the stable API intended for application code.
+
+See [Types](/docs/api/types).
+
+## TypeScript reports a model type error
+
+`createChatRoute()` expects an AI SDK `LanguageModel`.
+
+```tsx
+createChatRoute({
+  model,
+});
+```
+
+Make sure the value you pass is the actual model returned by your AI SDK provider.
+
+For example:
+
+```tsx
+import { google } from "@ai-sdk/google";
+
+const model = google("gemini-3.5-flash");
+```
+
+Then:
+
+```tsx
+createChatRoute({
+  model,
+});
+```
+
+Check that your AI SDK packages are compatible with each other if TypeScript reports conflicting model types.
+
+## The response is not streaming
+
+`createChatRoute()` uses the AI SDK streaming response APIs.
+
+If the request reaches the route but the client does not display streamed content, check that the client is connected to the route through the expected chatbot API endpoint.
+
+Also inspect the Network tab and server logs to verify that the route returns a successful streaming response.
+
+## How can I isolate the problem?
+
+Start with the smallest possible configuration:
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export function App() {
+  return <Chatbot apiEndpoint="/api/chat" />;
+}
+```
+
+Then use a minimal route:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model,
+});
+```
+
+Once that works, add customization, theming, and RAG one at a time.
+
+This makes it easier to identify which part of the setup is causing the problem.
+
+## Before opening an issue
+
+If you still have a problem, collect:
+
+- `react-ai-chat` version
+- React version
+- Framework and version
+- Node.js version
+- AI SDK provider and version
+- Relevant CLI command
+- Server error output
+- Browser console error
+- A minimal reproduction if possible
+
+Remove API keys and other secrets before sharing logs or configuration.
+
+<Cards>
+  <Card
+    title="Installation"
+    description="Check the basic package installation and setup."
+    href="/docs/getting-started/installation"
+  />
+  <Card
+    title="API Route"
+    description="Set up and verify your server-side chat route."
+    href="/docs/getting-started/api-route"
+  />
+  <Card
+    title="RAG"
+    description="Configure document retrieval and embedding providers."
+    href="/docs/guides/rag"
+  />
+  <Card
+    title="FAQ"
+    description="Find answers to common react-ai-chat questions."
+    href="/docs/more/faq"
+  />
+</Cards>
