@@ -16,6 +16,24 @@ You can run it directly with `npx`:
 npx react-ai-chat
 ```
 
+## Command overview
+
+| Command                                   | Purpose                                                   |
+| ----------------------------------------- | --------------------------------------------------------- |
+| `npx react-ai-chat init`                  | Generate an editable chatbot UI                           |
+| `npx react-ai-chat --<provider>`          | Create a RAG embedding index                              |
+| `npx react-ai-chat --provider <provider>` | Create a RAG embedding index using the specified provider |
+| `npx react-ai-chat --help`                | Show CLI help                                             |
+
+Supported embedding providers:
+
+- `google`
+- `openai`
+- `voyage`
+- `cohere`
+- `jina`
+- `huggingface`
+
 ## Generate a chatbot
 
 Use `init` to generate an editable chatbot implementation in your project:

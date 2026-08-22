@@ -18,7 +18,8 @@ Run:
 ```bash
 npx react-ai-chat init
 ```
-```
+
+````
 
 The CLI generates a TypeScript implementation.
 
@@ -26,9 +27,17 @@ For JSX instead:
 
 ```bash
 npx react-ai-chat init --jsx
+````
+
+You can choose where the files are generated.
+
+By default, the CLI generates the chatbot in:
+
+```text
+src/components/chatbot
 ```
 
-You can choose where the files are generated:
+You can provide a different directory with `--path`:
 
 ```bash
 npx react-ai-chat init --path src/components/chatbot

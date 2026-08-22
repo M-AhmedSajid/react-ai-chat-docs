@@ -10,6 +10,12 @@ export function baseOptions() {
         secondary: false,
       },
       {
+        text: "Playground",
+        url: "/playground",
+        active: "nested-url",
+        secondary: false,
+      },
+      {
         type: "icon",
         label: "NPM Package Link",
         text: "NPM Package Link",

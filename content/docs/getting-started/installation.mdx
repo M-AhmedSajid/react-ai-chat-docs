@@ -13,6 +13,7 @@ Install `react-ai-chat` in your React application, then import its stylesheet gl
   <ul>
     <li>Node.js 18 or later</li>
     <li>React 18 or React 19</li>
+    <li>React DOM 18 or React DOM 19</li>
     <li>Basic familiarity with React and TypeScript</li>
   </ul>
 </Callout>
@@ -81,19 +82,27 @@ Install `react-ai-chat` in your React application, then import its stylesheet gl
 
 The base package does not require you to install every supported AI provider.
 
-Install the provider SDK you plan to use when setting up your [API Route](/docs/getting-started/api-route).
+For your chatbot model, install the AI SDK provider you plan to use when setting up your [API Route](/docs/getting-started/api-route).
 
-For example, if you are using the Google provider with the AI SDK:
+For example, if you are using Google with the AI SDK:
 
 ```bash
 npm install ai @ai-sdk/google
 ```
 
-You only need the dependencies required by your chosen setup.
+RAG embedding providers have separate dependencies. Install only the embedding provider SDK you plan to use.
+
+For example:
+
+```bash
+npm install @google/genai
+```
+
+See [Providers](/docs/api/providers) for the complete list of supported embedding providers and their installation requirements.
 
 <Callout type="info">
-  Provider-specific installation steps are covered in the
-  [Providers](/docs/api/providers) section.
+  AI model providers and RAG embedding providers are configured separately. You
+  only need the dependencies required by the features you use.
 </Callout>
 
 ## Server setup

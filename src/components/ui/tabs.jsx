@@ -34,7 +34,7 @@ export function Tabs({
   onValueChange: _onValueChange,
   ...props
 }) {
-  const tabsRef = useRef < HTMLDivElement > null;
+  const tabsRef = useRef(null);
   const valueToIdMap = useMemo(() => new Map(), []);
   const panels = useMemo(() => new Map(), []);
   const [value, setValue] =

@@ -190,7 +190,7 @@ export function Feedback({ onSendAction }) {
 export function FeedbackText({ onSendAction, children }) {
   const [popup, _setPopup] = useState(null);
 
-  const containerRef = useRef < HTMLDivElement > null;
+  const containerRef = useRef(null);
   const { refs, floatingStyles } = useFloating({
     open: popup !== null,
     placement: "bottom",
