@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { RootProvider } from "fumadocs-ui/provider/next";
-// import { MyChatbot } from "@/components/mychatbot";
+import { MyChatbot } from "@/components/mychatbot";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -40,7 +40,7 @@ export default function RootLayout({ children }) {
             },
           }}
         >
-          {/* <MyChatbot /> */}
+          <MyChatbot />
           {children}
         </RootProvider>
       </body>

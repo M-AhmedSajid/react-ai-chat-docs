@@ -3,9 +3,11 @@ title: Installation
 description: Install react-ai-chat and prepare your React application for the chatbot.
 ---
 
+---
+
 # Installation
 
-Install `react-ai-chat` in your React application, then import its stylesheet globally.
+Install `react-ai-chat` in your React application and choose how you want to build your chatbot.
 
 <Callout type="info">
   <strong>Prerequisites</strong>
@@ -18,123 +20,219 @@ Install `react-ai-chat` in your React application, then import its stylesheet gl
   </ul>
 </Callout>
 
-## Install the package
+## Install react-ai-chat
 
 <Steps>
   <Step>
-    ### Install react-ai-chat
+    ### Install the package
 
-    <Tabs items={["npm", "pnpm", "yarn", "bun"]}>
-      <Tab value="npm">
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
 
-      ```bash
-      npm install react-ai-chat
-      ```
+```bash
+npm install react-ai-chat
+```
 
-      </Tab>
+  </Tab>
 
-      <Tab value="pnpm">
+  <Tab value="pnpm">
 
-      ```bash
-      pnpm add react-ai-chat
-      ```
+```bash
+pnpm add react-ai-chat
+```
 
-      </Tab>
+  </Tab>
 
-      <Tab value="yarn">
+  <Tab value="yarn">
 
-      ```bash
-      yarn add react-ai-chat
-      ```
+```bash
+yarn add react-ai-chat
+```
 
-      </Tab>
+  </Tab>
 
-      <Tab value="bun">
+  <Tab value="bun">
 
-      ```bash
-      bun add react-ai-chat
-      ```
+```bash
+bun add react-ai-chat
+```
 
-      </Tab>
-    </Tabs>
+  </Tab>
+</Tabs>
 
   </Step>
 
   <Step>
     ### Import the stylesheet
 
-    Import the package stylesheet once in your application's global stylesheet entry.
+If you are using the ready-made `<Chatbot />` component, import the package stylesheet once in your application's global stylesheet entry.
 
-    ```tsx
-    import "react-ai-chat/style.css";
-    ```
+```tsx
+import "react-ai-chat/style.css";
+```
 
-    Where you place this import depends on your framework. Keep it in a global location that is loaded by your application.
-
-    <Callout type="warn">
-      The chatbot relies on this stylesheet for its default layout and appearance. Make sure it is loaded before rendering the chatbot.
-    </Callout>
+The generated chatbot has its own `chatbot.css`, so you do not need the package stylesheet when using the generated UI.
 
   </Step>
 </Steps>
 
-## AI provider dependencies
+## AI model provider
 
-The base package does not require you to install every supported AI provider.
+`react-ai-chat` uses the Vercel AI SDK for the server-side model connection.
 
-For your chatbot model, install the AI SDK provider you plan to use when setting up your [API Route](/docs/getting-started/api-route).
+The `ai` package is included by `react-ai-chat`. You only need to install the provider package for the model you want to use.
 
-For example, if you are using Google with the AI SDK:
+For example, with Google:
 
 ```bash
-npm install ai @ai-sdk/google
+npm install @ai-sdk/google
 ```
 
-RAG embedding providers have separate dependencies. Install only the embedding provider SDK you plan to use.
+Then create your model in your API route:
 
-For example:
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("your-model"),
+});
+```
+
+The exact provider package depends on the AI model provider you choose.
+
+## RAG dependencies
+
+RAG embedding providers are optional.
+
+Install the SDK for the embedding provider you want to use:
+
+<Tabs items={["Google", "OpenAI", "Voyage", "Cohere", "Hugging Face"]}> <Tab value="Google">
 
 ```bash
 npm install @google/genai
 ```
 
-See [Providers](/docs/api/providers) for the complete list of supported embedding providers and their installation requirements.
+  </Tab>
+
+  <Tab value="OpenAI">
+
+```bash
+npm install openai
+```
+
+  </Tab>
+
+  <Tab value="Voyage">
+
+```bash
+npm install voyageai
+```
+
+  </Tab>
+
+  <Tab value="Cohere">
+
+```bash
+npm install cohere-ai
+```
+
+  </Tab>
+
+  <Tab value="Hugging Face">
+
+```bash
+npm install @huggingface/inference
+```
+
+  </Tab>
+</Tabs>
+
+Jina does not require an additional SDK. The package communicates with the Jina API directly.
+
+See [Embedding Providers](/docs/api/providers) for provider-specific setup and environment variables.
 
 <Callout type="info">
-  AI model providers and RAG embedding providers are configured separately. You
-  only need the dependencies required by the features you use.
+  AI model providers and RAG embedding providers are separate. Install only the
+  dependencies required by the features you use.
 </Callout>
+
+## Environment variables
+
+Set the API key required by your selected provider.
+
+For example, Google AI SDK:
+
+```text
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+```
+
+For RAG, use the environment variable required by the embedding provider.
+
+Keep API keys on the server. Do not expose them in client-side code.
+
+## Choose your chatbot setup
+
+You have two ways to build the UI.
+
+### Ready-made chatbot
+
+Use `<Chatbot />` when you want a complete chatbot component with built-in UI.
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export default function App() {
+  return <Chatbot />;
+}
+```
+
+Continue with [Quick Start](/docs/getting-started/quick-start).
+
+### Generated chatbot
+
+Use the CLI when you want the chatbot UI source code inside your project.
+
+```bash
+npx react-ai-chat init
+```
+
+The CLI generates editable React components and CSS that you can modify directly.
+
+Continue with [Generated Chatbot](/docs/guides/generated-chatbot).
 
 ## Server setup
 
-`react-ai-chat` provides a server-side `createChatRoute()` helper for creating your chatbot endpoint.
+Create an API endpoint with `createChatRoute()` and provide an AI SDK language model.
 
-The server setup requires an AI SDK-compatible model. The exact dependencies depend on the provider you choose.
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+import { google } from "@ai-sdk/google";
 
-You can continue to [API Route](/docs/getting-started/api-route) when you are ready to connect the chatbot to a model.
+export const POST = createChatRoute({
+  model: google("your-model"),
+});
+```
 
-## Framework setup
-
-The installation steps above work independently of your React framework.
-
-The [Quick Start](/docs/getting-started/quick-start) guide covers the complete setup in a tested framework, including the application structure and API route.
+Continue with [API Route](/docs/getting-started/api-route) to configure the server endpoint.
 
 ## What's next?
 
 <Cards>
   <Card
     title="Quick Start"
-    description="Build your first working chatbot from installation to a streamed AI response."
+    description="Build your first working chatbot."
     href="/docs/getting-started/quick-start"
   />
   <Card
-    title="Chatbot UI"
-    description="Learn how to configure and customize the chatbot interface."
-    href="/docs/getting-started/chatbot-ui"
+    title="Generated Chatbot"
+    description="Generate editable chatbot components in your project."
+    href="/docs/guides/generated-chatbot"
   />
   <Card
-    title="API Route"
-    description="Connect your chatbot to an AI SDK-compatible model."
-    href="/docs/getting-started/api-route"
+    title="RAG"
+    description="Add retrieval from your own documents."
+    href="/docs/guides/rag"
   />
 </Cards>

@@ -1,0 +1,255 @@
+---
+title: Errors
+description: Handle errors returned by react-ai-chat.
+---
+
+---
+
+# Errors
+
+`react-ai-chat` provides a `ChatbotError` class for representing errors that can occur while processing chatbot requests.
+
+## `ChatbotError`
+
+Import it from the package:
+
+```ts id="k4m8qz"
+import { ChatbotError } from "react-ai-chat";
+```
+
+The error contains a message and a `code` that identifies the type of failure.
+
+```ts id="x7p2nc"
+const error = new ChatbotError("Something went wrong", "UNKNOWN");
+
+console.log(error.message);
+console.log(error.code);
+```
+
+## Error codes
+
+`ChatbotError` supports these codes:
+
+| Code              | Meaning                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| `RATE_LIMIT`      | A provider has rejected the request because a rate limit was reached |
+| `AUTHENTICATION`  | Provider authentication failed                                       |
+| `INVALID_REQUEST` | The request is invalid                                               |
+| `PROVIDER`        | An error occurred with the AI provider                               |
+| `UNKNOWN`         | An error that does not match another category                        |
+
+The available codes are represented by the `ChatbotErrorCode` type:
+
+```ts id="m9v3rw"
+type ChatbotErrorCode =
+  | "RATE_LIMIT"
+  | "AUTHENTICATION"
+  | "INVALID_REQUEST"
+  | "PROVIDER"
+  | "UNKNOWN";
+```
+
+## Handling errors in the Chatbot
+
+The ready-made `<Chatbot />` component accepts an `onError` callback.
+
+```tsx id="q6k2xp"
+import { Chatbot } from "react-ai-chat";
+
+export default function App() {
+  return (
+    <Chatbot
+      onError={(error) => {
+        console.error("Chatbot error:", error);
+      }}
+    />
+  );
+}
+```
+
+Use the callback when you want to display your own error UI or send errors to your application's logging system.
+
+## Checking the error type
+
+You can check whether an error is a `ChatbotError`:
+
+```tsx id="v8n4mc"
+import { ChatbotError } from "react-ai-chat";
+
+function handleError(error: Error) {
+  if (error instanceof ChatbotError) {
+    console.error(error.code);
+    console.error(error.message);
+  }
+}
+```
+
+Then handle specific error codes:
+
+```tsx id="r5q7ks"
+function handleError(error: Error) {
+  if (!(error instanceof ChatbotError)) {
+    return;
+  }
+
+  switch (error.code) {
+    case "RATE_LIMIT":
+      console.log("Please try again later.");
+      break;
+
+    case "AUTHENTICATION":
+      console.log("Check the provider credentials.");
+      break;
+
+    case "INVALID_REQUEST":
+      console.log("Check the request data.");
+      break;
+
+    case "PROVIDER":
+      console.log("The AI provider returned an error.");
+      break;
+
+    default:
+      console.log("An unexpected error occurred.");
+  }
+}
+```
+
+## `createChatRoute` errors
+
+`createChatRoute()` catches errors thrown while starting model generation.
+
+Model-related errors are converted into a `ChatbotError` with an explanatory message.
+
+For example, an invalid model can result in:
+
+```ts id="c3w9pf"
+ChatbotError;
+```
+
+with a message similar to:
+
+```text id="n7x4qm"
+Invalid model specified: ...
+```
+
+Other route execution failures are wrapped as:
+
+```text id="b6k2zr"
+Chat route execution failed: ...
+```
+
+## RAG errors
+
+RAG retrieval has its own error handling.
+
+If retrieval fails, the route logs the retrieval error and continues without the retrieved context.
+
+This means an embedding provider failure does not automatically stop the model request.
+
+The route falls back to the configured `systemPrompt` and continues generating the response.
+
+## Custom error handling
+
+You can centralize chatbot error handling in your application:
+
+```tsx id="p8m5vx"
+import { Chatbot, ChatbotError } from "react-ai-chat";
+
+function handleChatbotError(error: Error) {
+  if (error instanceof ChatbotError) {
+    switch (error.code) {
+      case "RATE_LIMIT":
+        // Show a retry message
+        return;
+
+      case "AUTHENTICATION":
+        // Check server-side credentials
+        return;
+
+      case "INVALID_REQUEST":
+        // Check the request
+        return;
+
+      case "PROVIDER":
+        // Handle provider failure
+        return;
+
+      case "UNKNOWN":
+        // Handle unexpected errors
+        return;
+    }
+  }
+
+  console.error(error);
+}
+
+export default function App() {
+  return <Chatbot onError={handleChatbotError} />;
+}
+```
+
+## Server-side errors
+
+Keep provider credentials and server-side error details on the server.
+
+For example, API keys should never be passed to the client:
+
+```text id="z2r7mc"
+GOOGLE_GENERATIVE_AI_API_KEY=...
+OPENAI_API_KEY=...
+```
+
+The client only needs to communicate with your configured chat endpoint.
+
+## TypeScript
+
+The error types can also be imported when you need them in your own application code:
+
+```ts id="f4n8ky"
+import type { ChatbotErrorCode } from "react-ai-chat";
+import { ChatbotError } from "react-ai-chat";
+```
+
+You can use `ChatbotErrorCode` for typed error handling:
+
+```ts id="w3q9vp"
+function getErrorMessage(code: ChatbotErrorCode) {
+  switch (code) {
+    case "RATE_LIMIT":
+      return "Too many requests.";
+
+    case "AUTHENTICATION":
+      return "Authentication failed.";
+
+    case "INVALID_REQUEST":
+      return "Invalid request.";
+
+    case "PROVIDER":
+      return "Provider error.";
+
+    case "UNKNOWN":
+      return "Something went wrong.";
+  }
+}
+```
+
+## Related documentation
+
+<Cards>
+  <Card
+    title="Chatbot"
+    description="Handle errors with the ready-made chatbot."
+    href="/docs/api/chatbot"
+  />
+  <Card
+    title="createChatRoute"
+    description="Configure the server-side chat route."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="RAG"
+    description="Configure retrieval and understand RAG behavior."
+    href="/docs/guides/rag"
+  />
+</Cards>

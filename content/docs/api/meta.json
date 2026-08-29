@@ -6,6 +6,7 @@
     "use-chatbot-context",
     "providers",
     "create-chat-route",
-    "types"
+    "types",
+    "errors"
   ]
 }

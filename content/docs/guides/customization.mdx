@@ -1,177 +1,176 @@
 ---
 title: Customization
-description: Customize the appearance and behavior of the react-ai-chat chatbot.
+description: Customize the react-ai-chat chatbot to match your application.
 ---
 
-## Customization
+---
 
-`react-ai-chat` gives you two levels of customization.
+# Customization
 
-Use the ready-made `<Chatbot />` when you want to configure the existing interface through props.
+The ready-made `<Chatbot />` component provides props for changing its content, position, icons, classes, theme, and behavior.
 
-Use the generated chatbot when you want to change the UI structure and own the source code.
+For deeper control over the component structure, use the generated chatbot. See [Generated Chatbot](/docs/guides/generated-chatbot).
 
-```text
-<Chatbot />
-    ↓
-Props, theme, icons, classes
-    ↓
-Need more control?
-    ↓
-Generated chatbot
-    ↓
-Edit the generated source directly
-```
+## Text
 
-### Customize content
-
-You can change the text displayed throughout the chatbot:
+Customize the text displayed throughout the chatbot.
 
 ```tsx
 <Chatbot
-  title="Project Assistant"
-  subtitle="Ask questions about this project"
-  triggerText="Ask AI"
-  placeholder="Ask a question..."
-  emptyStateText="How can I help?"
-  starterPromptsLabel="Try asking:"
+  title="Support Assistant"
+  subtitle="We're here to help"
+  triggerText="Chat with support"
+  emptyStateText="What can we help you with?"
+  placeholder="Type your question..."
+  starterPromptsLabel="Popular questions"
 />
 ```
 
-You can also provide your own starter prompts:
+### Available text props
+
+| Prop                  | Purpose                                   |
+| --------------------- | ----------------------------------------- |
+| `title`               | Chatbot header title                      |
+| `subtitle`            | Chatbot header subtitle                   |
+| `triggerText`         | Text displayed on the chat trigger        |
+| `emptyStateText`      | Text shown when the conversation is empty |
+| `placeholder`         | Input placeholder                         |
+| `starterPromptsLabel` | Label displayed above starter prompts     |
+
+## Starter prompts
+
+Add predefined questions that users can select from.
 
 ```tsx
 <Chatbot
   starterPrompts={[
-    "What does this project do?",
-    "How do I get started?",
-    "Show me an example",
+    "What can you help me with?",
+    "How does this work?",
+    "Tell me about your services",
   ]}
 />
 ```
 
-Starter prompts are displayed when the conversation has no messages. Selecting one sends it as a normal chat message.
+Starter prompts are displayed when the conversation has no messages.
 
-Set `starterPrompts` to an empty array to hide them:
+## Position
 
-```tsx
-<Chatbot starterPrompts={[]} />
-```
-
-See [`<Chatbot />`](/docs/api/chatbot) for all available content props.
-
-### Position
-
-Control where the chatbot appears:
+Choose where the chatbot is placed.
 
 ```tsx
 <Chatbot position="bottom-right" />
 ```
 
-Available positions:
+Supported values:
 
-```ts
-type ChatbotPosition =
-  | "bottom-right"
-  | "bottom-left"
-  | "top-right"
-  | "top-left";
+```text
+bottom-right
+bottom-left
+top-right
+top-left
 ```
 
 The default is `bottom-right`.
 
-### Initial state
+## Custom icons
 
-Open the chatbot automatically when it mounts:
+The chatbot accepts React nodes for its main icons.
 
 ```tsx
-<Chatbot initialOpen />
+<Chatbot
+  triggerIcon={<ChatIcon />}
+  sendIcon={<SendIcon />}
+  closeIcon={<CloseIcon />}
+/>
 ```
 
-The default value is `false`.
+This lets you use an icon library or your own React components.
 
-### Theme mode
+## Custom CSS classes
 
-Choose how the chatbot handles light and dark themes:
+Use `classNames` to provide custom classes for chatbot elements.
+
+```tsx
+<Chatbot
+  classNames={{
+    wrapper: "my-chatbot",
+    trigger: "my-trigger",
+    window: "my-window",
+    header: "my-header",
+  }}
+/>
+```
+
+The available keys are:
+
+| Key       | Purpose              |
+| --------- | -------------------- |
+| `wrapper` | Root chatbot wrapper |
+| `trigger` | Chat trigger button  |
+| `window`  | Chat window          |
+| `header`  | Chat window header   |
+
+This approach is useful when you want to keep the component structure while changing its styling.
+
+## Theme mode
+
+Control whether the chatbot uses automatic, light, or dark mode.
+
+```tsx
+<Chatbot themeMode="light" />
+```
 
 ```tsx
 <Chatbot themeMode="dark" />
 ```
 
-Available values:
-
-```ts
-type ThemeMode = "auto" | "light" | "dark";
-```
-
-`auto` follows the user's system color preference.
-
 ```tsx
 <Chatbot themeMode="auto" />
 ```
 
-### Theme colors
+With `auto`, the chatbot follows the user's system color preference.
 
-Use the `theme` prop to customize the chatbot's colors:
+## Theme tokens
 
-```tsx
-<Chatbot
-  theme={{
-    primaryColor: "#18181b",
-    primaryForeground: "#ffffff",
-    background: "#ffffff",
-    foreground: "#18181b",
-    mutedBackground: "#f4f4f5",
-    mutedForeground: "#71717a",
-    borderColor: "#e4e4e7",
-  }}
-/>
-```
-
-#### Theme tokens
-
-| Token               | Description                                                       |
-| ------------------- | ----------------------------------------------------------------- |
-| `primaryColor`      | Primary color used by the header, trigger, and user messages.     |
-| `primaryForeground` | Text and icon color used on primary elements.                     |
-| `background`        | Main background color of the chatbot.                             |
-| `foreground`        | Main text color.                                                  |
-| `mutedBackground`   | Background used for assistant messages, inputs, and prompt chips. |
-| `mutedForeground`   | Secondary text color used for subtitles and labels.               |
-| `borderColor`       | Border color used by inputs and prompt chips.                     |
-
-Every token is optional.
-
-For example:
+For more control over the appearance, pass a `theme` object.
 
 ```tsx
 <Chatbot
   theme={{
     primaryColor: "#2563eb",
-    background: "#f8fafc",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#111827",
+    mutedBackground: "#f3f4f6",
+    mutedForeground: "#6b7280",
+    borderColor: "#e5e7eb",
   }}
 />
 ```
 
-Only the specified values are overridden.
+The available theme tokens are:
 
-### Light and dark themes
+| Token               | Purpose                              |
+| ------------------- | ------------------------------------ |
+| `primaryColor`      | Primary accent color                 |
+| `primaryForeground` | Text color on primary elements       |
+| `background`        | Main chatbot background              |
+| `foreground`        | Main text color                      |
+| `mutedBackground`   | Background for secondary UI elements |
+| `mutedForeground`   | Secondary text color                 |
+| `borderColor`       | Border color                         |
 
-You can provide separate values for light and dark modes:
+You can also provide separate light and dark overrides:
 
 ```tsx
 <Chatbot
-  themeMode="auto"
   theme={{
+    primaryColor: "#7c3aed",
     light: {
-      primaryColor: "#18181b",
-      primaryForeground: "#ffffff",
       background: "#ffffff",
       foreground: "#18181b",
     },
     dark: {
-      primaryColor: "#fafafa",
-      primaryForeground: "#18181b",
       background: "#18181b",
       foreground: "#fafafa",
     },
@@ -179,96 +178,33 @@ You can provide separate values for light and dark modes:
 />
 ```
 
-You can combine base tokens with light and dark overrides:
+See [Theming](/docs/guides/theming) for the complete theme configuration.
+
+## API endpoint
+
+The chatbot uses `/api/chat` by default.
+
+Set `apiEndpoint` when your server route uses another path.
 
 ```tsx
-<Chatbot
-  theme={{
-    borderColor: "#e4e4e7",
-    light: {
-      background: "#ffffff",
-    },
-    dark: {
-      background: "#18181b",
-      borderColor: "#3f3f46",
-    },
-  }}
-/>
+<Chatbot apiEndpoint="/api/assistant" />
 ```
 
-This lets you define shared values while overriding individual tokens for each mode.
+Your server must expose a `POST` handler at the same endpoint.
 
-### Custom icons
+## Initial state
 
-You can replace the default icons with your own React nodes.
-
-#### Trigger icon
+Use `initialOpen` to decide whether the chatbot is open when it first renders.
 
 ```tsx
-<Chatbot triggerIcon={<MyTriggerIcon />} />
+<Chatbot initialOpen />
 ```
 
-#### Send icon
+The default is `false`.
 
-```tsx
-<Chatbot sendIcon={<MySendIcon />} />
-```
+## Error handling
 
-#### Close icon
-
-```tsx
-<Chatbot closeIcon={<MyCloseIcon />} />
-```
-
-You can use your own components or icons from a library such as Lucide.
-
-### Custom classes
-
-Use `classNames` when you need to add application-specific CSS classes to the existing chatbot elements:
-
-```tsx
-<Chatbot
-  classNames={{
-    wrapper: "my-chatbot-wrapper",
-    trigger: "my-chatbot-trigger",
-    window: "my-chatbot-window",
-    header: "my-chatbot-header",
-  }}
-/>
-```
-
-Available keys:
-
-| Key       | Applied to               |
-| --------- | ------------------------ |
-| `wrapper` | Outer chatbot wrapper.   |
-| `trigger` | Floating trigger button. |
-| `window`  | Chat window.             |
-| `header`  | Chat window header.      |
-
-These classes are added alongside the chatbot's built-in classes.
-
-For example:
-
-```tsx
-<Chatbot
-  classNames={{
-    wrapper: "project-chatbot",
-  }}
-/>
-```
-
-```css
-.project-chatbot {
-  font-family: Inter, sans-serif;
-}
-```
-
-This approach works well when you want to style the existing interface without changing its structure.
-
-### Custom error handling
-
-Use `onError` to handle errors from the chatbot:
+Use `onError` to respond to errors from the chatbot.
 
 ```tsx
 <Chatbot
@@ -278,181 +214,88 @@ Use `onError` to handle errors from the chatbot:
 />
 ```
 
-You can use this callback for your application's error handling, logging, or monitoring.
+You can use this callback to connect the chatbot to your application's error reporting or custom UI.
 
-### Custom API endpoint
+See [Errors](/docs/api/errors) for the available error types and codes.
 
-The chatbot can connect to a custom endpoint:
+## Customizing the generated UI
 
-```tsx
-<Chatbot apiEndpoint="/api/assistant" />
+The props above are useful when the ready-made component gives you enough control.
+
+If you need to change the actual React structure, generate the chatbot instead:
+
+```bash
+npx react-ai-chat init --help
 ```
 
-The default endpoint is:
+Use the available `init` flags to choose how the generated chatbot is created for your project.
 
-```text
-/api/chat
-```
+The generated UI is editable source code. You can change its markup, message rendering, input behavior, and styles directly.
 
-The endpoint can use `createChatRoute()`:
+The generated UI uses:
 
-```tsx
-import { createChatRoute } from "react-ai-chat/server";
+- `ChatbotProvider`
+- `useChatbotContext`
 
-export const POST = createChatRoute({
-  model,
-});
-```
+from `react-ai-chat`.
 
-See [API Route](/docs/getting-started/api-route).
+This gives you control over the component structure while keeping the package's chat state and request handling.
 
-## Full customization example
+See [Generated Chatbot](/docs/guides/generated-chatbot).
 
-Here is a chatbot using several customization options together:
+## Complete example
 
 ```tsx
-"use client";
-
 import { Chatbot } from "react-ai-chat";
 import "react-ai-chat/style.css";
 
-export function ProjectAssistant() {
+export default function App() {
   return (
     <Chatbot
-      title="Project Assistant"
-      subtitle="Ask questions about this project"
-      triggerText="Ask AI"
-      placeholder="What would you like to know?"
-      emptyStateText="Ask me about the project"
-      starterPrompts={[
-        "What does this project do?",
-        "How do I install it?",
-        "Show me an example",
-      ]}
-      starterPromptsLabel="Try asking:"
+      title="Ahmed's Assistant"
+      subtitle="Ask me anything"
+      triggerText="Chat"
       position="bottom-right"
+      initialOpen={false}
+      placeholder="Ask a question..."
+      emptyStateText="How can I help?"
+      starterPrompts={[
+        "What can you help me with?",
+        "Tell me about this project",
+      ]}
+      starterPromptsLabel="Try asking"
       themeMode="auto"
-      triggerIcon={<span>💬</span>}
-      theme={{
-        light: {
-          primaryColor: "#18181b",
-          primaryForeground: "#ffffff",
-          background: "#ffffff",
-          foreground: "#18181b",
-        },
-        dark: {
-          primaryColor: "#fafafa",
-          primaryForeground: "#18181b",
-          background: "#18181b",
-          foreground: "#fafafa",
-        },
-      }}
-      classNames={{
-        wrapper: "project-chatbot",
-      }}
       apiEndpoint="/api/chat"
       onError={(error) => {
-        console.error("Chatbot error:", error);
+        console.error(error);
       }}
     />
   );
 }
 ```
 
-## When props are enough
+## Choosing the right approach
 
-Use `<Chatbot />` when your changes fit within its existing API.
+Use the ready-made `<Chatbot />` when you want to configure the existing interface through props.
 
-This covers:
-
-- Text and starter prompts
-- Position
-- Initial open state
-- Light and dark themes
-- Theme colors
-- Trigger, send, and close icons
-- CSS classes
-- API endpoint
-- Error handling
-
-The ready-made component keeps the UI implementation inside the package while letting you configure its supported options.
-
-See [`<Chatbot />`](/docs/api/chatbot) for the complete prop reference.
-
-## When you need full UI control
-
-Use the generated chatbot when you want to change the structure of the interface itself.
-
-Generate it with:
-
-```bash
-npx react-ai-chat init
-```
-
-The CLI creates editable source files:
-
-```text
-chatbot/
-├── chatbot.tsx
-├── chatbot-header.tsx
-├── chatbot-messages.tsx
-├── chatbot-input.tsx
-└── chatbot.css
-```
-
-You own these files and can change their markup and styling directly.
-
-The generated UI uses `ChatbotProvider` and `useChatbotContext` from `react-ai-chat` to access the chatbot state and actions.
-
-For example:
-
-```tsx
-import { useChatbotContext } from "react-ai-chat";
-
-export function CustomInput() {
-  const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-        disabled={isLoading}
-      />
-
-      <button type="submit" disabled={isLoading || !input.trim()}>
-        Send
-      </button>
-    </form>
-  );
-}
-```
-
-This is the right approach when you want to build a chatbot UI that matches your application's own design system.
-
-See [Generated Chatbot](/docs/guides/generated-chatbot).
+Use the generated chatbot when your application needs changes to the component structure, message rendering, input behavior, or CSS.
 
 ## Next steps
 
 <Cards>
   <Card
-    title="Chatbot"
-    description="See every available Chatbot prop."
-    href="/docs/api/chatbot"
+    title="Theming"
+    description="Customize the chatbot's theme tokens and color modes."
+    href="/docs/guides/theming"
   />
   <Card
     title="Generated Chatbot"
-    description="Generate and customize the chatbot source code."
+    description="Generate and edit the chatbot source code."
     href="/docs/guides/generated-chatbot"
   />
   <Card
-    title="ChatbotProvider"
-    description="Learn how to provide chatbot state to your custom UI."
-    href="/docs/api/chatbot-provider"
-  />
-  <Card
-    title="useChatbotContext"
-    description="Access chatbot state and actions from custom components."
-    href="/docs/api/use-chatbot-context"
+    title="Chatbot API"
+    description="Explore every prop available on the Chatbot component."
+    href="/docs/api/chatbot"
   />
 </Cards>

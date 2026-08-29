@@ -1,272 +1,183 @@
 ---
 title: ChatbotProvider
-description: Provide chatbot state and configuration to your custom React chatbot UI.
+description: API reference for managing chatbot state with ChatbotProvider.
+---
+
 ---
 
 # ChatbotProvider
 
-`ChatbotProvider` provides the state and actions needed to build a custom chatbot UI.
+`ChatbotProvider` provides the state and actions used by the generated chatbot UI.
 
-It is the foundation of the generated chatbot. You can also use it directly when you want to build your own chatbot components from scratch.
+It is useful when you want to build your own chatbot interface while keeping `react-ai-chat` responsible for chat state and communication with your API route.
 
-```tsx
-"use client";
+## Import
 
-import { ChatbotProvider } from "react-ai-chat";
-
-export function CustomChatbot() {
-  return (
-    <ChatbotProvider apiEndpoint="/api/chat">
-      {/* Your chatbot UI */}
-    </ChatbotProvider>
-  );
-}
+```tsx id="y6jv3q"
+import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
 ```
-
-`ChatbotProvider` manages:
-
-- Open and closed state
-- Input state
-- Chat messages
-- Loading state
-- Message submission
-- Position
-- Theme mode
-- Theme styles
-- Chat API communication
-
-The provider exposes this state through [`useChatbotContext`](/docs/api/use-chatbot-context).
 
 ## Basic usage
 
 Wrap your chatbot UI with `ChatbotProvider`:
 
-```tsx
-"use client";
-
-import { ChatbotProvider } from "react-ai-chat";
-import { CustomHeader } from "./custom-header";
-import { CustomMessages } from "./custom-messages";
-import { CustomInput } from "./custom-input";
-
-export function CustomChatbot() {
-  return (
-    <ChatbotProvider apiEndpoint="/api/chat">
-      <CustomHeader />
-      <CustomMessages />
-      <CustomInput />
-    </ChatbotProvider>
-  );
-}
-```
-
-Every component that calls `useChatbotContext()` must be rendered somewhere inside the provider.
-
-## Props
-
-### `children`
-
-The React elements that should have access to the chatbot context.
-
-```tsx
+```tsx id="w9h4kc"
 <ChatbotProvider>
   <YourChatbot />
 </ChatbotProvider>
 ```
 
-Type:
+Components inside the provider can then access the chatbot state through `useChatbotContext()`.
 
-```ts
-children: ReactNode;
+```tsx id="j3v7sx"
+function YourChatbot() {
+  const { messages, input, setInput, handleSubmit, isLoading } =
+    useChatbotContext();
+
+  return <div>{/* Your chatbot UI */}</div>;
+}
 ```
+
+## Provider options
+
+`ChatbotProvider` accepts the configuration required by the chatbot state.
+
+The generated chatbot uses the provider internally, so you usually only need to use it directly when building a custom UI.
 
 ### `apiEndpoint`
 
-The API endpoint used to send chat messages.
-
-```tsx
-<ChatbotProvider apiEndpoint="/api/chat">
-  <YourChatbot />
-</ChatbotProvider>
+```ts id="s8f2qd"
+apiEndpoint?: string
 ```
 
-Type:
+The endpoint used for chat requests.
 
-```ts
-apiEndpoint?: string;
-```
+**Default:** `"/api/chat"`
 
-When omitted, the underlying chat transport uses its default API endpoint.
-
-You can use a custom endpoint:
-
-```tsx
+```tsx id="x4m7pk"
 <ChatbotProvider apiEndpoint="/api/assistant">
   <YourChatbot />
 </ChatbotProvider>
 ```
 
-The endpoint should accept the chat requests expected by the AI SDK transport.
+## Context
 
-See [API Route](/docs/getting-started/api-route).
+Use `useChatbotContext()` inside a `ChatbotProvider` to access the chatbot state and actions.
 
-### `initialOpen`
-
-Controls whether the chatbot starts open.
-
-```tsx
-<ChatbotProvider initialOpen>
-  <YourChatbot />
-</ChatbotProvider>
+```tsx id="v2n9cz"
+const {
+  messages,
+  input,
+  setInput,
+  handleSubmit,
+  isLoading,
+  isOpen,
+  setIsOpen,
+} = useChatbotContext();
 ```
 
-Type:
+### `messages`
 
-```ts
-initialOpen?: boolean;
+The current conversation messages.
+
+```ts id="j7c4mx"
+messages;
 ```
 
-Default:
+Use this value to render the conversation.
 
-```text
-false
+```tsx id="q9s2vr"
+{
+  messages.map((message) => (
+    <div key={message.id}>
+      {message.role}: {message.content}
+    </div>
+  ));
+}
 ```
 
-You can control the state later through `setIsOpen` from `useChatbotContext()`.
+### `input`
 
-### `position`
+The current value of the message input.
 
-Defines the chatbot's position.
-
-```tsx
-<ChatbotProvider position="bottom-right">
-  <YourChatbot />
-</ChatbotProvider>
+```ts id="n5d8wp"
+input: string;
 ```
 
-Type:
+### `setInput`
 
-```ts
-position?:
-  | "bottom-right"
-  | "bottom-left"
-  | "top-right"
-  | "top-left";
+Updates the message input.
+
+```ts id="a3f6ky"
+setInput: (value: string) => void
 ```
 
-Default:
+Example:
 
-```text
-bottom-right
+```tsx id="c8m2zr"
+<input value={input} onChange={(event) => setInput(event.target.value)} />
 ```
 
-The provider makes the selected position available through `useChatbotContext()`.
+### `handleSubmit`
 
-The provider does not create the visual layout itself. Your UI decides how to use the position value.
+Submits the current message.
 
-### `themeMode`
-
-Controls the active theme mode.
-
-```tsx
-<ChatbotProvider themeMode="dark">
-  <YourChatbot />
-</ChatbotProvider>
+```ts id="f4q8nb"
+handleSubmit: () => void
 ```
 
-Available values:
+Example:
 
-```ts
-themeMode?: "auto" | "light" | "dark";
+```tsx id="u7x1mc"
+<button onClick={handleSubmit}>Send</button>
 ```
 
-Default:
+### `isLoading`
 
-```text
-auto
+Indicates whether the chatbot is waiting for a response.
+
+```ts id="e6r3pv"
+isLoading: boolean;
 ```
 
-`auto` lets your UI respond to the user's system color preference.
+Use it to disable controls or display a loading indicator:
 
-The selected value is available through `useChatbotContext()`.
-
-### `theme`
-
-Provides theme tokens for the chatbot.
-
-```tsx
-<ChatbotProvider
-  theme={{
-    primaryColor: "#18181b",
-    primaryForeground: "#ffffff",
-    background: "#ffffff",
-    foreground: "#18181b",
-    mutedBackground: "#f4f4f5",
-    mutedForeground: "#71717a",
-    borderColor: "#e4e4e7",
-  }}
->
-  <YourChatbot />
-</ChatbotProvider>
+```tsx id="k2z5wd"
+{
+  isLoading && <span>Thinking...</span>;
+}
 ```
 
-You can also provide light and dark overrides:
+### `isOpen`
 
-```tsx
-<ChatbotProvider
-  theme={{
-    light: {
-      background: "#ffffff",
-      foreground: "#18181b",
-    },
-    dark: {
-      background: "#18181b",
-      foreground: "#fafafa",
-    },
-  }}
->
-  <YourChatbot />
-</ChatbotProvider>
+Indicates whether the chatbot UI is currently open.
+
+```ts id="p8v4qs"
+isOpen: boolean;
 ```
 
-The provider converts these theme values into CSS custom properties and exposes them through `themeStyles`.
+### `setIsOpen`
 
-See [`useChatbotContext`](/docs/api/use-chatbot-context) for how to use those styles.
+Controls the open state.
 
-### `onError`
-
-Receives errors from the underlying chat request.
-
-```tsx
-<ChatbotProvider
-  onError={(error) => {
-    console.error("Chatbot error:", error);
-  }}
->
-  <YourChatbot />
-</ChatbotProvider>
+```ts id="m6x9rt"
+setIsOpen: (open: boolean) => void
 ```
 
-Type:
+Example:
 
-```ts
-onError?: (error: Error) => void;
+```tsx id="z3c7hf"
+<button onClick={() => setIsOpen(true)}>Open chat</button>
 ```
 
-This is useful for application-level logging or error monitoring.
+## Custom chatbot example
 
-## Build your own UI
+You can combine the provider and context to build your own interface:
 
-`ChatbotProvider` does not dictate your chatbot's markup.
-
-You can build the interface around the context:
-
-```tsx
-"use client";
-
+```tsx id="r5k8nd"
 import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
 
-function ChatbotUI() {
+function CustomChatbot() {
   const { messages, input, setInput, handleSubmit, isLoading } =
     useChatbotContext();
 
@@ -275,20 +186,21 @@ function ChatbotUI() {
       <div>
         {messages.map((message) => (
           <div key={message.id}>
-            {message.parts.map((part, index) => {
-              if (part.type !== "text") return null;
-
-              return <span key={index}>{part.text}</span>;
-            })}
+            {message.role}: {message.content}
           </div>
         ))}
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSubmit();
+        }}
+      >
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
-          disabled={isLoading}
+          placeholder="Ask something..."
         />
 
         <button type="submit" disabled={isLoading || !input.trim()}>
@@ -299,90 +211,42 @@ function ChatbotUI() {
   );
 }
 
-export function CustomChatbot() {
+export default function App() {
   return (
     <ChatbotProvider apiEndpoint="/api/chat">
-      <ChatbotUI />
+      <CustomChatbot />
     </ChatbotProvider>
   );
 }
 ```
 
-This approach lets you decide how messages, inputs, buttons, loading states, and other UI elements should look.
+## Provider vs ready-made Chatbot
 
-## Provider state
+Use `<Chatbot />` when you want the complete built-in interface.
 
-The provider exposes the following values through `useChatbotContext()`:
+Use `ChatbotProvider` when you want to build the interface yourself while using the package's chat state and request handling.
 
-| Value          | Type                      | Description                                       |
-| -------------- | ------------------------- | ------------------------------------------------- |
-| `isOpen`       | `boolean`                 | Whether the chatbot is open.                      |
-| `setIsOpen`    | `(open: boolean) => void` | Opens or closes the chatbot.                      |
-| `input`        | `string`                  | Current input value.                              |
-| `setInput`     | `(input: string) => void` | Updates the input value.                          |
-| `messages`     | AI SDK messages           | Current conversation messages.                    |
-| `status`       | AI SDK status             | Current chat request status.                      |
-| `isLoading`    | `boolean`                 | Whether a message is being submitted or streamed. |
-| `handleSubmit` | function                  | Sends a message.                                  |
-| `position`     | `ChatbotPosition`         | Configured chatbot position.                      |
-| `themeMode`    | `ThemeMode`               | Configured theme mode.                            |
-| `themeStyles`  | `CSSProperties`           | Generated CSS custom properties from the theme.   |
-
-See [`useChatbotContext`](/docs/api/use-chatbot-context) for the complete hook API.
-
-## Provider and generated chatbot
-
-The CLI uses this provider when it generates the chatbot:
-
-```bash
-npx react-ai-chat init
-```
-
-The generated components use:
-
-```tsx
-import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
-```
-
-This gives the generated UI access to the package's chat state while keeping the UI source code inside your project.
-
-See [Generated Chatbot](/docs/guides/generated-chatbot).
-
-## Provider vs `<Chatbot />`
-
-Use `<Chatbot />` when you want the complete ready-made interface:
-
-```tsx
-<Chatbot title="Project Assistant" themeMode="dark" />
-```
-
-Use `ChatbotProvider` when you are building the interface yourself:
-
-```tsx
-<ChatbotProvider themeMode="dark">
-  <YourChatbotUI />
-</ChatbotProvider>
-```
-
-The provider is a lower-level API. It gives your components access to chatbot state without deciding how the interface should look.
+The generated chatbot uses this approach internally.
 
 ## Important
 
-`useChatbotContext()` must be called inside a `ChatbotProvider`.
+`useChatbotContext()` must be called from a component rendered inside `ChatbotProvider`.
 
-This will throw an error:
+This will cause an error:
 
-```tsx
+```tsx id="y5c2jx"
 function MyComponent() {
   const context = useChatbotContext();
 
-  return <div>Chatbot</div>;
+  return <div />;
 }
 ```
 
-Use the component inside the provider instead:
+when `MyComponent` is rendered without a provider.
 
-```tsx
+Wrap it with:
+
+```tsx id="v8n4kc"
 <ChatbotProvider>
   <MyComponent />
 </ChatbotProvider>
@@ -393,17 +257,17 @@ Use the component inside the provider instead:
 <Cards>
   <Card
     title="useChatbotContext"
-    description="Access chatbot state and actions from your custom UI."
+    description="Explore the state and actions available inside the provider."
     href="/docs/api/use-chatbot-context"
   />
   <Card
     title="Generated Chatbot"
-    description="Generate an editable chatbot UI with the CLI."
+    description="See how the generated UI uses ChatbotProvider."
     href="/docs/guides/generated-chatbot"
   />
   <Card
-    title="Chatbot"
-    description="Use the complete ready-made chatbot component."
-    href="/docs/api/chatbot"
+    title="Customization"
+    description="Customize the ready-made chatbot."
+    href="/docs/guides/customization"
   />
 </Cards>

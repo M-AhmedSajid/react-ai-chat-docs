@@ -1,369 +1,202 @@
 ---
 title: RAG
-description: Add retrieval augmented generation to your react-ai-chat chatbot.
+description: Give your chatbot access to your own documents using retrieval augmented generation.
+---
+
 ---
 
 # RAG
 
-RAG, or retrieval augmented generation, lets your chatbot answer questions using your own content.
+RAG, or Retrieval Augmented Generation, lets your chatbot retrieve relevant information from your own documents before generating an answer.
 
-`react-ai-chat` handles the retrieval step on the server. Your documents are converted into embeddings, stored in an index, and searched when a user sends a message.
+`react-ai-chat` provides the tooling to create an embedding index and retrieve relevant chunks during a chat request.
 
-The overall flow is:
+## How it works
 
-```text
-Your documents
-      ↓
-Chunking
-      ↓
-Embeddings
-      ↓
-Embedding index
-      ↓
+The RAG pipeline has two stages.
+
+### Indexing
+
+Your documents are processed and converted into embeddings:
+
+```text id="7h2mqa"
+Markdown / MDX files
+        ↓
+Clean document content
+        ↓
+Split into chunks
+        ↓
+Generate embeddings
+        ↓
+Save embedding index
+```
+
+### Retrieval
+
+When a user asks a question:
+
+```text id="n8z4pc"
 User question
       ↓
-Query embedding
+Generate query embedding
       ↓
-Similarity search
+Compare against index
       ↓
-Relevant context
+Rank by cosine similarity
+      ↓
+Select topK chunks
+      ↓
+Add context to system prompt
       ↓
 AI model
-      ↓
-Answer
 ```
 
-## How RAG works
+The model can then use the retrieved content when answering the question.
 
-There are two stages.
+## 1. Prepare your documents
 
-### 1. Generate the embedding index
-
-Create an embedding index from your content with the CLI:
-
-```bash
-npx react-ai-chat --google
-```
-
-By default, the CLI reads:
-
-```text
-./content
-```
-
-and writes:
-
-```text
-./chatbot/embeddings.json
-```
-
-You can provide custom paths:
-
-```bash
-npx react-ai-chat --google ./docs ./data/embeddings.json
-```
-
-The CLI loads your documents, splits them into chunks, generates an embedding for each chunk, and saves the resulting index.
-
-See [CLI](/docs/guides/cli) for the complete command reference.
-
-### 2. Retrieve context during chat
-
-Your API route passes the generated index and an embedding function to `createChatRoute()`:
-
-```tsx
-import { createChatRoute } from "react-ai-chat/server";
-
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-  },
-});
-```
-
-When a user sends a message, the server creates an embedding for the question and compares it with the vectors in the index.
-
-Relevant chunks are selected and added to the model's context.
-
-The retrieval happens entirely on the server. Your chatbot UI does not need to know that RAG is enabled.
-
-## Create your content
-
-Create a directory containing the material your chatbot should search.
+Place your Markdown or MDX documents in a directory.
 
 For example:
 
-```text
+```text id="6j3q2m"
 content/
-├── getting-started.md
-├── installation.md
-├── configuration.md
+├── getting-started/
+│   ├── installation.md
+│   └── quick-start.md
+├── guides/
+│   ├── authentication.mdx
+│   └── deployment.mdx
 └── faq.md
 ```
 
-You can use documentation, FAQs, product information, guides, project information, or other text content.
+The CLI reads Markdown and MDX content from the selected source directory.
 
-The CLI processes supported files from the content directory and creates the embedding index from them.
+## 2. Generate the embedding index
 
-## Generate the index
+Run:
 
-Choose an embedding provider.
-
-For example, with Google:
-
-```bash
-npx react-ai-chat --google
+```bash id="7r4k1p"
+npx react-ai-chat embed
 ```
 
-With a custom content directory:
+The CLI walks you through the embedding configuration.
 
-```bash
-npx react-ai-chat --google ./docs
+You select:
+
+1. Embedding provider
+2. Embedding model
+3. Output dimensions
+4. Optional fallback model
+5. Source directory
+6. Output path
+
+See [CLI](/docs/guides/cli) for the complete command documentation.
+
+## Chunking
+
+Documents are split before embeddings are generated.
+
+The current chunking configuration is:
+
+| Setting       |           Value |
+| ------------- | --------------: |
+| Chunk size    | 1000 characters |
+| Chunk overlap |  200 characters |
+
+The overlap helps preserve context when information spans two neighboring chunks.
+
+For example:
+
+```text id="b5m7vx"
+Document
+──────────────────────────────────────────────>
+
+[ Chunk 1: 1000 chars ]
+                     [ 200 char overlap ]
+                              [ Chunk 2: 1000 chars ]
+                                                   [ ... ]
 ```
-
-With custom input and output paths:
-
-```bash
-npx react-ai-chat --google ./docs ./data/embeddings.json
-```
-
-You can also use the explicit output option:
-
-```bash
-npx react-ai-chat --google ./docs --output ./data/embeddings.json
-```
-
-The generated index can then be used by your server route.
 
 ## Embedding providers
 
-The CLI supports these embedding providers:
+The package supports:
 
 - Google
 - OpenAI
-- Voyage
+- Voyage AI
 - Cohere
-- Jina
+- Jina AI
 - Hugging Face
+
+Each provider has its own models and API credentials.
+
+See [Providers](/docs/api/providers) for the current provider configuration and model catalogue.
+
+## Embedding dimensions
+
+Every vector in an embedding index must have the same number of dimensions.
 
 For example:
 
-```bash
-npx react-ai-chat --google
+```text id="q8p4cz"
+Document chunk → [768 values]
+Document chunk → [768 values]
+Document chunk → [768 values]
 ```
 
-or:
+The query embedding must also have the same dimension.
 
-```bash
-npx react-ai-chat --openai
+A mismatch causes retrieval to fail.
+
+This is why the CLI filters compatible fallback models according to the selected dimensions.
+
+## Fallback models
+
+You can configure a fallback model during index generation.
+
+The fallback is useful when the primary embedding provider reaches its rate limit.
+
+The generation process can then continue using the fallback configuration.
+
+```text id="j4r6st"
+Primary model
+     ↓
+Rate limit?
+   ↙     ↘
+ No       Yes
+ ↓         ↓
+Continue  Fallback model
+             ↓
+          Continue
 ```
 
-or:
+The generated index records the embedding model used for each chunk.
 
-```bash
-npx react-ai-chat --jina
-```
+## Connect the index to your chatbot
 
-See [Providers](/docs/api/providers) for provider-specific setup.
+After generating your embedding index, import the generated `embeddings.json` file into your server route.
 
-The provider used to create the index must produce embeddings compatible with the provider used for query retrieval.
+The embedding provider should use the same model recorded in the generated index.
 
-## Configure the API route
-
-Once your index has been generated, pass it to `createChatRoute()`.
+For example, if you generated the index with Google:
 
 ```tsx
-import { createChatRoute } from "react-ai-chat/server";
-
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-  },
-});
-```
-
-### `index`
-
-`index` contains the embedding data generated from your documents.
-
-```tsx
-rag: {
-  index,
-}
-```
-
-Load the generated index in your server code and pass it to the route.
-
-### `provider`
-
-`provider` is the embedding function used to create the query embedding.
-
-```tsx
-rag: {
-  provider,
-}
-```
-
-It should correspond to the embedding provider used when the index was created.
-
-### `topK`
-
-Use `topK` to control how many matching chunks are retrieved:
-
-```tsx
-rag: {
-  index,
-  provider,
-  topK: 3,
-}
-```
-
-For example, `topK: 3` allows up to three relevant chunks to be included in the retrieved context.
-
-If `topK` is omitted, the retrieval system uses its default.
-
-Start with a small value and adjust it based on the quality and amount of context your model needs.
-
-## Generate embeddings with Google
-
-Install the Google GenAI package:
-
-```bash
-npm install @google/genai
-```
-
-Set your API key:
-
-```text
-GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
-```
-
-Generate the index:
-
-```bash
-npx react-ai-chat --google
-```
-
-Create the embedding provider on the server:
-
-```tsx
-import { GoogleGenAI } from "@google/genai";
-import { googleEmbedding } from "react-ai-chat/server";
-
-const client = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-});
-
-const provider = googleEmbedding(client);
-```
-
-Then pass the provider to the RAG configuration:
-
-```tsx
-import { createChatRoute } from "react-ai-chat/server";
-
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-    topK: 3,
-  },
-});
-```
-
-## Generate embeddings with OpenAI
-
-Install the OpenAI package:
-
-```bash
-npm install openai
-```
-
-Set your API key:
-
-```text
-OPENAI_API_KEY=your_api_key_here
-```
-
-Generate the index:
-
-```bash
-npx react-ai-chat --openai
-```
-
-Create the embedding provider:
-
-```tsx
-import OpenAI from "openai";
-import { openaiEmbedding } from "react-ai-chat/server";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
-
-const provider = openaiEmbedding(client);
-```
-
-Then configure RAG:
-
-```tsx
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-    topK: 3,
-  },
-});
-```
-
-See [Providers](/docs/api/providers) for the other supported embedding providers.
-
-## Complete example
-
-Start with your content:
-
-```text
-content/
-├── installation.md
-├── configuration.md
-└── faq.md
-```
-
-Generate the index:
-
-```bash
-npx react-ai-chat --google
-```
-
-This creates:
-
-```text
-chatbot/
-└── embeddings.json
-```
-
-Load the index in your server route and create the embedding provider:
-
-```tsx
+import { google } from "@ai-sdk/google";
 import { GoogleGenAI } from "@google/genai";
 import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
-
 import embeddings from "@/chatbot/embeddings.json";
 
 const client = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const provider = googleEmbedding(client);
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
 export const POST = createChatRoute({
-  model,
+  model: google("gemini-3.5-flash"),
   rag: {
     index: embeddings,
     provider,
@@ -372,300 +205,198 @@ export const POST = createChatRoute({
 });
 ```
 
-Your client can continue using the normal chatbot:
+### What's happening here?
+
+The generated `embeddings.json` contains metadata about the embedding configuration used when the index was created.
 
 ```tsx
-"use client";
-
-import { Chatbot } from "react-ai-chat";
-import "react-ai-chat/style.css";
-
-export function App() {
-  return <Chatbot apiEndpoint="/api/chat" />;
-}
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 ```
 
-The client does not require any RAG-specific configuration.
+Using `embeddings.model` keeps the retrieval provider aligned with the model stored in the index.
 
-## Retrieval
+The language model used to generate the chatbot response is configured separately:
 
-Suppose a user asks:
-
-```text
-How do I configure authentication?
+```tsx
+model: google("gemini-3.5-flash"),
 ```
 
-The server creates an embedding for the question.
+The embedding model and chat model serve different purposes.
 
-It compares that vector with the vectors stored in the index.
+The embedding model converts text into vectors for retrieval. The chat model generates the final response.
 
-The most relevant chunks are selected:
+### Configure `topK`
 
-```text
-User question
-      ↓
-Query embedding
-      ↓
-Similarity search
-      ↓
-Relevant chunks
-      ↓
-Retrieved context
+`topK` controls how many matching document chunks are retrieved for each user question.
+
+```tsx
+rag: {
+  index: embeddings,
+  provider,
+  topK: 5,
+},
 ```
 
-The retrieved context is then supplied to the model when generating the response.
+The default is `3`.
 
-The model can use your project documentation as part of its answer.
+A higher value gives the language model more retrieved context. Choose a value that fits the amount of context your application needs.
 
-## Similarity threshold
+### Provider-specific setup
 
-Retrieval uses vector similarity to determine which chunks are relevant to the question.
+The same pattern applies to the other supported embedding providers.
 
-The package applies a minimum similarity score when selecting context. Chunks below that threshold are excluded.
+The provider client and embedding function change according to the provider used to generate the index.
 
-This helps prevent unrelated content from being added to the model context.
+See [Providers](/docs/api/providers) for the provider-specific configuration examples.
 
-`topK` controls the maximum number of chunks that can be retrieved after relevance filtering.
+<Callout type="info">
+  The embedding model used for retrieval needs to match the embedding
+  configuration represented by your index. Your chat model can be a completely
+  different model.
+</Callout>
 
-## Chunking
+## What gets retrieved?
 
-Documents are split into smaller chunks before embeddings are generated.
+The latest user message is used as the retrieval query.
 
 For example:
 
-```text
-Large document
-      ↓
-Chunk 1
-Chunk 2
-Chunk 3
-Chunk 4
-      ↓
-Embedding for each chunk
+```text id="c9w2hf"
+User:
+"How do I configure authentication?"
 ```
 
-Smaller chunks allow retrieval to target the relevant part of a document instead of returning the entire document.
+The question is converted into an embedding and compared against every indexed chunk.
 
-Chunking happens when you generate the embedding index.
+The chunks with the highest cosine similarity are selected.
 
-## Updating your content
+The selected content is then provided to the language model as relevant context.
 
-The embedding index is generated from your source content.
+## Retrieval errors
 
-If you change a document:
+RAG retrieval is handled independently from model generation.
 
-```text
-content/
-└── installation.md
+If retrieval fails, `react-ai-chat` logs the retrieval error and continues the chat request without the retrieved context.
+
+This means a temporary embedding provider problem does not automatically prevent the language model from responding.
+
+## Updating your knowledge base
+
+Regenerate the index whenever your source documents change:
+
+```bash id="h3v8yk"
+npx react-ai-chat embed
 ```
 
-regenerate the index:
+You should also regenerate it when you change:
 
-```bash
-npx react-ai-chat --google
-```
+- Embedding provider
+- Embedding model
+- Embedding dimensions
+- Source documents
 
-The old index does not automatically update when your source files change.
+The generated index represents the embedding configuration used when it was created.
 
-For a production workflow, regenerate the index whenever the source content changes.
+## Embedding index
 
-## RAG with the generated chatbot
+The generated JSON index contains the information required for retrieval, including:
 
-RAG works with the generated chatbot as well.
+- Index metadata
+- Embedding provider
+- Embedding model
+- Embedding dimensions
+- Document chunks
+- Chunk embeddings
+- Per-chunk embedding metadata
 
-The generated UI sends messages to your API route. Retrieval happens inside that route.
+The retrieval system validates the index before performing a search.
 
-Your server can use:
+## Example architecture
 
-```tsx
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-    topK: 3,
-  },
-});
-```
-
-The generated chatbot can continue using:
+After running the embedding command, your project can look like this:
 
 ```text
-/api/chat
-```
-
-No retrieval logic needs to be added to the client.
-
-## RAG with `<Chatbot />`
-
-The ready-made chatbot works the same way:
-
-```tsx
-"use client";
-
-import { Chatbot } from "react-ai-chat";
-import "react-ai-chat/style.css";
-
-export function App() {
-  return <Chatbot apiEndpoint="/api/chat" />;
-}
-```
-
-RAG remains a server-side concern.
-
-The chatbot only sends the user's message to `/api/chat`.
-
-## RAG with a custom UI
-
-You can also use RAG with a custom UI built using `ChatbotProvider` and `useChatbotContext()`.
-
-The client-side code remains focused on the chat interface:
-
-```tsx
-"use client";
-
-import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
-
-function ChatUI() {
-  const { input, setInput, handleSubmit, messages, isLoading } =
-    useChatbotContext();
-
-  return <div>{/* Render your custom UI */}</div>;
-}
-
-export function CustomChatbot() {
-  return (
-    <ChatbotProvider apiEndpoint="/api/chat">
-      <ChatUI />
-    </ChatbotProvider>
-  );
-}
-```
-
-Your server route handles retrieval:
-
-```tsx
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-    topK: 3,
-  },
-});
-```
-
-This keeps your retrieval implementation independent from your UI.
-
-## Project structure
-
-A typical RAG project can look like:
-
-```text
-my-project/
-├── content/
-│   ├── getting-started.md
-│   ├── configuration.md
-│   └── faq.md
-├── chatbot/
-│   └── embeddings.json
+project/
 ├── app/
 │   └── api/
 │       └── chat/
 │           └── route.ts
-└── components/
-    └── chatbot.tsx
+├── chatbot/
+│   └── embeddings.json
+├── content/
+│   ├── docs/
+│   └── faq/
+└── package.json
 ```
 
-The `content` directory contains your source material.
+The `embeddings.json` file is generated by the CLI and contains the embedding index and its metadata.
 
-The `embeddings.json` file contains the generated embedding index.
+Your API route can import that file directly:
 
-The API route handles chat requests and retrieval.
+```tsx id="d8q2km"
+import { google } from "@ai-sdk/google";
+import { GoogleGenAI } from "@google/genai";
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+import embeddings from "@/chatbot/embeddings.json";
 
-The client component displays the chatbot.
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
-## Choosing `topK`
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
-`topK` controls the maximum number of chunks retrieved for a question.
-
-For example:
-
-```tsx
-rag: {
-  index,
-  provider,
-  topK: 3,
-}
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+  rag: {
+    index: embeddings,
+    provider,
+    topK: 3,
+  },
+});
 ```
 
-A smaller value keeps the retrieved context focused.
+The resulting request flow is:
 
-A larger value gives the model more source material.
-
-Start with a small value and increase it when answers need more context.
-
-Remember that retrieved chunks still need to pass the package's similarity filtering before they are included.
-
-## Troubleshooting
-
-### No relevant context is being retrieved
-
-Check that:
-
-- Your source content was indexed successfully.
-- The embedding provider matches the provider used to generate the index.
-- The API route is loading the correct `embeddings.json`.
-- Your `topK` value is appropriate for the content.
-- Your source documents contain information relevant to the user's question.
-
-Regenerate the index after changing your source content:
-
-```bash
-npx react-ai-chat --google
+```text
+Source documents
+      ↓
+npx react-ai-chat embed
+      ↓
+chatbot/embeddings.json
+      ↓
+createChatRoute()
+      ↓
+Retrieve relevant chunks
+      ↓
+Add context to the system prompt
+      ↓
+Chat model
+      ↓
+Response
 ```
 
-### The embedding provider does not match
-
-An index generated with one embedding system should be queried with the compatible embedding provider.
-
-For example, if you generated the index with:
-
-```bash
-npx react-ai-chat --google
-```
-
-use the corresponding Google embedding provider for retrieval.
-
-### The index is outdated
-
-Regenerate it after modifying your documents:
-
-```bash
-npx react-ai-chat --google
-```
+This gives the chatbot access to your project's own documentation instead of relying only on the model's training data.
 
 ## Next steps
 
 <Cards>
   <Card
-    title="Providers"
-    description="Configure the embedding providers supported by react-ai-chat."
-    href="/docs/api/providers"
-  />
-  <Card
     title="CLI"
-    description="Generate embedding indexes from your content."
+    description="Learn how to generate your embedding index."
     href="/docs/guides/cli"
   />
   <Card
-    title="API Route"
-    description="Configure the server endpoint that handles chat and retrieval."
-    href="/docs/getting-started/api-route"
+    title="Providers"
+    description="Configure the embedding provider used by your index."
+    href="/docs/api/providers"
   />
   <Card
-    title="Generated Chatbot"
-    description="Generate an editable chatbot implementation."
-    href="/docs/guides/generated-chatbot"
+    title="API Route"
+    description="Connect RAG to your server-side chat route."
+    href="/docs/getting-started/api-route"
   />
 </Cards>

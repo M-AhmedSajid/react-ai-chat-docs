@@ -1,85 +1,57 @@
 ---
-title: Providers
-description: Configure embedding providers for RAG with react-ai-chat.
+title: Embedding Providers
+description: Configure embedding providers for react-ai-chat RAG.
 ---
 
-# Providers
+---
+
+# Embedding Providers
 
 `react-ai-chat` supports multiple embedding providers for RAG.
 
-Embedding providers convert text into vectors that can be compared to find relevant content.
+The server package exports:
 
-The currently supported providers are:
-
-- Google
-- OpenAI
-- Voyage
-- Cohere
-- Jina
-- Hugging Face
-
-The provider wrappers are included in `react-ai-chat`. Most providers use their official SDK as an optional peer dependency. Jina uses a client provided directly by `react-ai-chat`.
-
-## How providers are used
-
-Providers are used when creating your RAG embedding index and when retrieving relevant content during a chat request.
-
-```text
-Documents
-   ↓
-Embedding provider
-   ↓
-Embedding vectors
-   ↓
-Embedding index
-   ↓
-User question
-   ↓
-Query embedding
-   ↓
-Relevant chunks
+```tsx id="p7m3vx"
+import {
+  googleEmbedding,
+  openAIEmbedding,
+  voyageEmbedding,
+  cohereEmbedding,
+  jinaEmbedding,
+  huggingFaceEmbedding,
+} from "react-ai-chat/server";
 ```
 
-The provider used to create an index should match the provider used to query that index.
+The provider you use to query the index must be compatible with the embedding configuration used when the index was generated.
 
 ## Google
 
 Install the Google GenAI SDK:
 
-```bash
+```bash id="x5q8kc"
 npm install @google/genai
 ```
 
-Set your API key:
+Create a Google client:
 
-```text
-GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
-```
-
-Create a Google GenAI client and pass it to `googleEmbedding()`:
-
-```tsx
+```tsx id="r2n6wp"
 import { GoogleGenAI } from "@google/genai";
 import { googleEmbedding } from "react-ai-chat/server";
 
 const client = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const provider = googleEmbedding(client);
-```
-
-The default embedding model is:
-
-```text
-gemini-embedding-001
-```
-
-You can provide a different model:
-
-```tsx
 const provider = googleEmbedding(client, {
   model: "gemini-embedding-001",
+});
+```
+
+When using a generated embedding index, use the model stored in the index:
+
+```tsx id="k8v3mz"
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
 });
 ```
 
@@ -87,392 +59,259 @@ const provider = googleEmbedding(client, {
 
 Install the OpenAI SDK:
 
-```bash
+```bash id="q4m7xs"
 npm install openai
 ```
 
-Set your API key:
+Create an OpenAI client:
 
-```text
-OPENAI_API_KEY=your_api_key_here
-```
-
-Create an OpenAI client and pass it to `openAIEmbedding()`:
-
-```tsx
+```tsx id="n6c2vp"
 import OpenAI from "openai";
 import { openAIEmbedding } from "react-ai-chat/server";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-const provider = openAIEmbedding(client);
-```
-
-The default embedding model is:
-
-```text
-text-embedding-3-small
-```
-
-You can provide a different model:
-
-```tsx
 const provider = openAIEmbedding(client, {
   model: "text-embedding-3-small",
 });
 ```
 
-## Voyage
+Use the model recorded in your generated index when configuring RAG:
+
+```tsx id="j9r5wd"
+const provider = openAIEmbedding(client, {
+  model: embeddings.model,
+});
+```
+
+## Voyage AI
 
 Install the Voyage AI SDK:
 
-```bash
+```bash id="t3x7qn"
 npm install voyageai
 ```
 
-Set your API key:
+Create the client and embedding provider:
 
-```text
-VOYAGE_API_KEY=your_api_key_here
-```
-
-Create a Voyage client and pass it to `voyageEmbedding()`:
-
-```tsx
-import { VoyageAIClient } from "voyageai";
+```tsx id="v8k2mf"
+import VoyageAI from "voyageai";
 import { voyageEmbedding } from "react-ai-chat/server";
 
-const client = new VoyageAIClient({
-  apiKey: process.env.VOYAGE_API_KEY!,
+const client = new VoyageAI({
+  apiKey: process.env.VOYAGE_API_KEY,
 });
 
-const provider = voyageEmbedding(client);
-```
-
-The default embedding model is:
-
-```text
-voyage-4-lite
-```
-
-You can provide a different model:
-
-```tsx
 const provider = voyageEmbedding(client, {
-  model: "voyage-4-lite",
+  model: "voyage-3-large",
 });
 ```
 
-The provider automatically uses the appropriate input type for document and query embeddings.
+For an existing generated index:
+
+```tsx id="c6p4zr"
+const provider = voyageEmbedding(client, {
+  model: embeddings.model,
+});
+```
 
 ## Cohere
 
 Install the Cohere SDK:
 
-```bash
+```bash id="m5v9xs"
 npm install cohere-ai
 ```
 
-Set your API key:
+Create the client:
 
-```text
-COHERE_API_KEY=your_api_key_here
-```
-
-Create a Cohere client and pass it to `cohereEmbedding()`:
-
-```tsx
+```tsx id="w2q7kc"
 import { CohereClientV2 } from "cohere-ai";
 import { cohereEmbedding } from "react-ai-chat/server";
 
 const client = new CohereClientV2({
-  token: process.env.COHERE_API_KEY!,
+  token: process.env.COHERE_API_KEY,
 });
 
-const provider = cohereEmbedding(client);
-```
-
-The default embedding model is:
-
-```text
-embed-v4.0
-```
-
-You can provide a different model:
-
-```tsx
 const provider = cohereEmbedding(client, {
   model: "embed-v4.0",
 });
 ```
 
-The provider automatically sets the appropriate input type for document and query embeddings.
+For an existing generated index:
 
-## Jina
-
-`react-ai-chat` includes its own Jina client, so you don't need to install a Jina SDK.
-
-Set your API key:
-
-```text
-JINA_API_KEY=your_api_key_here
-```
-
-Create the client with `createJinaClient()`:
-
-```tsx
-import {
-  createJinaClient,
-  jinaEmbedding,
-} from "react-ai-chat/server";
-
-const client = createJinaClient({
-  apiKey: process.env.JINA_API_KEY!,
-});
-
-const provider = jinaEmbedding(client);
-```
-
-The client communicates directly with the Jina embeddings API using `fetch()`.
-
-The default base URL is:
-
-```text
-https://api.jina.ai/v1
-```
-
-You can provide a custom base URL:
-
-```tsx
-const client = createJinaClient({
-  apiKey: process.env.JINA_API_KEY!,
-  baseURL: "https://api.jina.ai/v1",
+```tsx id="h4n8vp"
+const provider = cohereEmbedding(client, {
+  model: embeddings.model,
 });
 ```
 
-### Embedding model
+## Jina AI
 
-The default model is:
+Jina uses its own API client helper.
 
-```text
-jina-embeddings-v3
-```
+Create the client with `createJinaClient`:
 
-You can provide a different model:
+```tsx id="s7m3qx"
+import { createJinaClient, jinaEmbedding } from "react-ai-chat/server";
 
-```tsx
+const client = createJinaClient({
+  apiKey: process.env.JINA_API_KEY,
+});
+
 const provider = jinaEmbedding(client, {
   model: "jina-embeddings-v3",
 });
 ```
 
-The provider uses different Jina tasks depending on the type of embedding:
+For an existing index:
 
-```text
-Document → retrieval.passage
-Query    → retrieval.query
-```
-
-### Direct client usage
-
-`createJinaClient()` returns a client with an `embeddings.create()` method.
-
-```tsx
-const response = await client.embeddings.create({
-  model: "jina-embeddings-v3",
-  input: ["Your text here"],
-  task: "retrieval.query",
+```tsx id="e9r4kw"
+const provider = jinaEmbedding(client, {
+  model: embeddings.model,
 });
 ```
 
-You normally don't need to call this method yourself. Pass the client to `jinaEmbedding()` and let the provider handle embedding requests.
-
 ## Hugging Face
 
-Install the Hugging Face Inference SDK:
+Install the Hugging Face inference SDK:
 
-```bash
+```bash id="y6p2nc"
 npm install @huggingface/inference
 ```
 
-Set your API token:
+Create the client:
 
-```text
-HF_TOKEN=your_api_token_here
-```
-
-Create an inference client and pass it to `huggingFaceEmbedding()`:
-
-```tsx
-import { InferenceClient } from "@huggingface/inference";
+```tsx id="f8q5vr"
+import { HfInference } from "@huggingface/inference";
 import { huggingFaceEmbedding } from "react-ai-chat/server";
 
-const client = new InferenceClient(
-  process.env.HF_TOKEN!,
-);
+const client = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
-const provider = huggingFaceEmbedding(client);
-```
-
-The default embedding model is:
-
-```text
-sentence-transformers/all-MiniLM-L6-v2
-```
-
-You can provide a different model:
-
-```tsx
 const provider = huggingFaceEmbedding(client, {
   model: "sentence-transformers/all-MiniLM-L6-v2",
 });
 ```
 
-## Provider overview
+For an existing generated index:
 
-| Provider     | Package                    | Default model                            | Client               |
-| ------------ | -------------------------- | ---------------------------------------- | -------------------- |
-| Google       | `@google/genai`            | `gemini-embedding-001`                   | `GoogleGenAI`        |
-| OpenAI       | `openai`                   | `text-embedding-3-small`                 | `OpenAI`             |
-| Voyage       | `voyageai`                 | `voyage-4-lite`                          | `VoyageAIClient`     |
-| Cohere       | `cohere-ai`                | `embed-v4.0`                             | `CohereClientV2`     |
-| Jina         | Built into `react-ai-chat` | `jina-embeddings-v3`                     | `createJinaClient()` |
-| Hugging Face | `@huggingface/inference`   | `sentence-transformers/all-MiniLM-L6-v2` | `InferenceClient`    |
-
-The SDK packages are optional peer dependencies. Install only the provider SDKs you use. Jina does not require an additional SDK.
-
-## Using a provider with the CLI
-
-The provider can be selected when generating an embedding index with the `react-ai-chat` CLI.
-
-Google:
-
-```bash
-npx react-ai-chat --google
+```tsx id="z3m7kx"
+const provider = huggingFaceEmbedding(client, {
+  model: embeddings.model,
+});
 ```
 
-OpenAI:
+## Provider and index compatibility
 
-```bash
-npx react-ai-chat --openai
+An embedding index is tied to the embedding model that generated its vectors.
+
+For example, if your index was generated with:
+
+```text id="q8v4ms"
+google / gemini-embedding-001
 ```
 
-Voyage:
+your RAG route should use the same embedding configuration:
 
-```bash
-npx react-ai-chat --voyage
+```tsx id="n5x2kp"
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 ```
 
-Cohere:
+Changing the model can produce vectors with different dimensions or a different embedding space.
 
-```bash
-npx react-ai-chat --cohere
+If you change the embedding provider or model, regenerate the index.
+
+```bash id="u7c9rf"
+npx react-ai-chat embed
 ```
 
-Jina:
+## API keys
 
-```bash
-npx react-ai-chat --jina
+Keep provider API keys on the server.
+
+For example:
+
+```text id="b4m8qs"
+GOOGLE_GENERATIVE_AI_API_KEY=...
+OPENAI_API_KEY=...
+VOYAGE_API_KEY=...
+COHERE_API_KEY=...
+JINA_API_KEY=...
+HUGGINGFACE_API_KEY=...
 ```
 
-Hugging Face:
+Do not expose these values in client-side code.
 
-```bash
-npx react-ai-chat --huggingface
-```
+## Using a provider in `createChatRoute`
 
-The CLI creates embeddings for your content and writes them to the generated embedding index.
+Once your provider is configured, pass it to the `rag` option:
 
-See [CLI](/docs/guides/cli) for the complete setup.
+```tsx id="r6k3wp"
+import { google } from "@ai-sdk/google";
+import { GoogleGenAI } from "@google/genai";
+import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+import embeddings from "@/chatbot/embeddings.json";
 
-## Using a provider with RAG
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
-The provider is passed to `createChatRoute()` when you enable RAG.
-
-```tsx
-import { createChatRoute } from "react-ai-chat/server";
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
 export const POST = createChatRoute({
-  model,
+  model: google("gemini-3.5-flash"),
   rag: {
-    index,
+    index: embeddings,
     provider,
     topK: 3,
   },
 });
 ```
 
-The provider generates an embedding for the user's question.
+The embedding provider handles vector generation for retrieval.
 
-`react-ai-chat` compares that embedding against the vectors stored in the index and retrieves the most relevant chunks.
+The `model` passed to `createChatRoute` handles the final response.
 
-See [RAG](/docs/guides/rag) for the complete workflow.
+These can use different model providers.
 
-## Embedding provider interface
+## Rate limits and fallback models
 
-All provider wrappers implement the same `EmbeddingProvider` interface:
+The embedding CLI supports a fallback model when generating an index.
 
-```ts
-interface EmbeddingProvider {
-  name: string;
-  model: string;
+If the primary embedding model reaches its rate limit during indexing, the CLI can switch to the configured fallback model.
 
-  embed(
-    text: string,
-    type?: "document" | "query"
-  ): Promise<number[]>;
-}
+The generated index records the embedding configuration used during generation.
+
+If embeddings were generated using a fallback model, configure your retrieval provider with the model recorded in the generated index:
+
+```tsx id="k7w2mc"
+const provider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 ```
 
-The `type` parameter identifies whether the text is being embedded as a document or as a query.
-
-This common interface allows the RAG system to work with different providers without changing the retrieval code.
-
-## Provider functions
-
-The provider functions are available from the server entry:
-
-```tsx
-import {
-  googleEmbedding,
-  openAIEmbedding,
-  voyageEmbedding,
-  cohereEmbedding,
-  createJinaClient,
-  jinaEmbedding,
-  huggingFaceEmbedding,
-} from "react-ai-chat/server";
-```
-
-| Provider     | Function                 |
-| ------------ | ------------------------ |
-| Google       | `googleEmbedding()`      |
-| OpenAI       | `openAIEmbedding()`      |
-| Voyage       | `voyageEmbedding()`      |
-| Cohere       | `cohereEmbedding()`      |
-| Jina         | `jinaEmbedding()`        |
-| Hugging Face | `huggingFaceEmbedding()` |
-
-Jina additionally exports `createJinaClient()` because its HTTP client is implemented inside `react-ai-chat`.
-
-## Related
+## Related documentation
 
 <Cards>
   <Card
     title="RAG"
-    description="Build a chatbot that can answer questions using your own content."
+    description="Set up retrieval augmented generation."
     href="/docs/guides/rag"
   />
   <Card
     title="CLI"
-    description="Generate embedding indexes and chatbot components from the command line."
+    description="Generate and configure your embedding index."
     href="/docs/guides/cli"
   />
   <Card
-    title="API Route"
-    description="Connect your embedding provider to createChatRoute()."
-    href="/docs/getting-started/api-route"
+    title="createChatRoute"
+    description="Connect your embedding provider to the chat route."
+    href="/docs/api/create-chat-route"
   />
 </Cards>

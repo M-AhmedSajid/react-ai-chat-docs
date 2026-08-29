@@ -1,11 +1,13 @@
 ---
 title: Types
-description: TypeScript types exported by react-ai-chat for chatbot configuration, RAG, embeddings, and themes.
+description: TypeScript types exported and used by react-ai-chat.
+---
+
 ---
 
 # Types
 
-`react-ai-chat` exports TypeScript types for its client components, server APIs, embedding system, RAG configuration, and theming.
+`react-ai-chat` provides TypeScript types for embedding providers, RAG indexes, chatbot configuration, and theme customization.
 
 You can import the types directly from the package:
 
@@ -14,20 +16,14 @@ import type {
   ChatbotProps,
   ChatbotTheme,
   ChatbotThemeTokens,
-  ChatRouteOptions,
-  EmbeddingProvider,
   EmbeddingIndex,
-  EmbeddedChunk,
-  Document,
-  Chunk,
+  EmbeddingProvider,
 } from "react-ai-chat";
 ```
 
-The package's public types are defined in `src/types.ts`.
-
 ## `EmbeddingProvider`
 
-Describes an embedding provider used by the CLI and RAG system.
+Defines the interface required by an embedding provider.
 
 ```ts
 interface EmbeddingProvider {
@@ -40,19 +36,18 @@ interface EmbeddingProvider {
 
 ### Properties
 
-| Property | Type       | Description                            |
-| -------- | ---------- | -------------------------------------- |
-| `name`   | `string`   | Name of the embedding provider.        |
-| `model`  | `string`   | Embedding model used by the provider.  |
-| `embed`  | `function` | Creates an embedding vector from text. |
+| Property | Type     | Description                   |
+| -------- | -------- | ----------------------------- |
+| `name`   | `string` | Provider name                 |
+| `model`  | `string` | Embedding model               |
+| `embed`  | function | Generates an embedding vector |
 
-The `type` argument can be:
+The optional `type` argument identifies whether the text is being embedded as a document or query.
 
 ```ts
-"document" | "query";
+await provider.embed(text, "document");
+await provider.embed(question, "query");
 ```
-
-Use `"document"` when embedding source content and `"query"` when embedding a user's question.
 
 ## `Document`
 
@@ -65,16 +60,9 @@ interface Document {
 }
 ```
 
-### Properties
-
-| Property | Type     | Description                         |
-| -------- | -------- | ----------------------------------- |
-| `id`     | `string` | Unique identifier for the document. |
-| `text`   | `string` | Document content.                   |
-
 ## `Chunk`
 
-Represents a section of a source document.
+Represents a document chunk before an embedding is generated.
 
 ```ts
 interface Chunk {
@@ -85,20 +73,16 @@ interface Chunk {
 }
 ```
 
-### Properties
-
-| Property | Type     | Description                         |
-| -------- | -------- | ----------------------------------- |
-| `id`     | `string` | Unique identifier for the chunk.    |
-| `source` | `string` | Source document identifier or path. |
-| `chunk`  | `number` | Chunk index within the source.      |
-| `text`   | `string` | Text contained in the chunk.        |
-
-Chunks are created when the CLI processes your source documents.
+| Property | Type     | Description             |
+| -------- | -------- | ----------------------- |
+| `id`     | `string` | Unique chunk identifier |
+| `source` | `string` | Source document         |
+| `chunk`  | `number` | Chunk number            |
+| `text`   | `string` | Chunk content           |
 
 ## `EmbeddedChunk`
 
-Represents a document chunk together with its embedding vector.
+Represents a chunk together with its embedding vector.
 
 ```ts
 interface EmbeddedChunk {
@@ -107,29 +91,21 @@ interface EmbeddedChunk {
   chunk: number;
   text: string;
   embedding: number[];
+  embeddingModel?: string;
 }
 ```
 
-### Properties
-
-| Property    | Type       | Description                         |
-| ----------- | ---------- | ----------------------------------- |
-| `id`        | `string`   | Unique chunk identifier.            |
-| `source`    | `string`   | Source document identifier or path. |
-| `chunk`     | `number`   | Chunk index.                        |
-| `text`      | `string`   | Chunk content.                      |
-| `embedding` | `number[]` | Vector representation of the chunk. |
-
-These objects are stored inside an `EmbeddingIndex`.
+The `embeddingModel` property is optional.
 
 ## `EmbeddingIndex`
 
-Represents the complete embedding index generated from your content.
+Represents the generated RAG index.
 
 ```ts
 interface EmbeddingIndex {
   provider: string;
   model: string;
+  fallbackModel?: string;
   dimensions: number;
   chunks: EmbeddedChunk[];
 }
@@ -137,38 +113,24 @@ interface EmbeddingIndex {
 
 ### Properties
 
-| Property     | Type              | Description                                    |
-| ------------ | ----------------- | ---------------------------------------------- |
-| `provider`   | `string`          | Name of the embedding provider.                |
-| `model`      | `string`          | Embedding model used to create the index.      |
-| `dimensions` | `number`          | Number of dimensions in each embedding vector. |
-| `chunks`     | `EmbeddedChunk[]` | Embedded document chunks.                      |
+| Property        | Type              | Description                         |
+| --------------- | ----------------- | ----------------------------------- |
+| `provider`      | `string`          | Provider used to generate the index |
+| `model`         | `string`          | Primary embedding model             |
+| `fallbackModel` | `string`          | Fallback model, when configured     |
+| `dimensions`    | `number`          | Vector dimensions                   |
+| `chunks`        | `EmbeddedChunk[]` | Embedded document chunks            |
 
-The CLI generates an index containing this structure.
-
-You can pass the index to `createChatRoute()`:
-
-```tsx
-import { createChatRoute } from "react-ai-chat/server";
-
-export const POST = createChatRoute({
-  model,
-  rag: {
-    index,
-    provider,
-  },
-});
-```
-
-See [RAG](/docs/guides/rag).
+This is the structure stored in the generated `embeddings.json`.
 
 ## `CreateIndexOptions`
 
-Defines the options used when creating an embedding index.
+Options used when creating an embedding index.
 
 ```ts
 interface CreateIndexOptions {
   provider: EmbeddingProvider;
+  fallbackProvider?: EmbeddingProvider;
   documentsPath?: string;
   outputPath?: string;
 }
@@ -176,23 +138,16 @@ interface CreateIndexOptions {
 
 ### Properties
 
-| Property        | Type                | Required | Description                                  |
-| --------------- | ------------------- | -------- | -------------------------------------------- |
-| `provider`      | `EmbeddingProvider` | Yes      | Embedding provider used to create the index. |
-| `documentsPath` | `string`            | No       | Path containing the source documents.        |
-| `outputPath`    | `string`            | No       | Path where the generated index is saved.     |
-
-The CLI uses these concepts when processing your content.
-
-For example:
-
-```bash
-npx react-ai-chat --google ./docs ./data/embeddings.json
-```
+| Property           | Type                | Description                 |
+| ------------------ | ------------------- | --------------------------- |
+| `provider`         | `EmbeddingProvider` | Primary embedding provider  |
+| `fallbackProvider` | `EmbeddingProvider` | Optional fallback provider  |
+| `documentsPath`    | `string`            | Source documents directory  |
+| `outputPath`       | `string`            | Generated index output path |
 
 ## `RetrieveContextOptions`
 
-Defines the options used when retrieving relevant chunks from an embedding index.
+Options used when retrieving relevant document chunks.
 
 ```ts
 interface RetrieveContextOptions {
@@ -205,18 +160,16 @@ interface RetrieveContextOptions {
 
 ### Properties
 
-| Property     | Type              | Description                                     |
-| ------------ | ----------------- | ----------------------------------------------- |
-| `question`   | `string`          | User question used for retrieval.               |
-| `embeddings` | `EmbeddedChunk[]` | Chunks to search.                               |
-| `embedFn`    | `function`        | Function used to create the question embedding. |
-| `topK`       | `number`          | Maximum number of chunks to retrieve.           |
-
-The server-side RAG flow uses these values when searching the embedding index.
+| Property     | Type              | Description                          |
+| ------------ | ----------------- | ------------------------------------ |
+| `question`   | `string`          | User's retrieval query               |
+| `embeddings` | `EmbeddedChunk[]` | Indexed document chunks              |
+| `embedFn`    | function          | Generates the query embedding        |
+| `topK`       | `number`          | Maximum number of chunks to retrieve |
 
 ## `ChatRouteOptions`
 
-Defines the configuration accepted by `createChatRoute()`.
+Options accepted by `createChatRoute()`.
 
 ```ts
 interface ChatRouteOptions {
@@ -233,45 +186,89 @@ interface ChatRouteOptions {
 
 ### `model`
 
-```ts
-model: LanguageModel;
-```
-
-The AI SDK language model used to generate responses.
+The AI SDK language model used to generate the response.
 
 ### `systemPrompt`
 
-```ts
-systemPrompt?: string;
-```
-
-Optional system instruction for the model.
+Optional system instructions.
 
 ### `maxMessages`
 
-```ts
-maxMessages?: number;
-```
-
-Maximum number of recent messages sent to the model.
+Optional limit for the number of messages processed by the route.
 
 ### `rag`
+
+Optional RAG configuration.
 
 ```ts
 rag?: {
   index: EmbeddingIndex;
   provider: EmbeddingProvider;
   topK?: number;
-};
+}
 ```
 
-Optional RAG configuration.
+See [RAG](/docs/guides/rag).
 
-See [`createChatRoute`](/docs/api/create-chat-route).
+## `GoogleEmbeddingOptions`
+
+```ts
+interface GoogleEmbeddingOptions {
+  model?: string;
+  dimensions?: number;
+}
+```
+
+## `OpenAIEmbeddingOptions`
+
+```ts
+interface OpenAIEmbeddingOptions {
+  model?: string;
+  dimensions?: number;
+}
+```
+
+## `VoyageEmbeddingOptions`
+
+```ts
+interface VoyageEmbeddingOptions {
+  model?: string;
+  dimensions?: number;
+}
+```
+
+## `CohereEmbeddingOptions`
+
+```ts
+interface CohereEmbeddingOptions {
+  model?: string;
+  dimensions?: number;
+}
+```
+
+## `JinaEmbeddingOptions`
+
+```ts
+interface JinaEmbeddingOptions {
+  model?: string;
+  dimensions?: number;
+}
+```
+
+## `HuggingFaceEmbeddingOptions`
+
+```ts
+interface HuggingFaceEmbeddingOptions {
+  model?: string;
+  dimensions?: number;
+}
+```
+
+All embedding provider options use the same shape. `model` selects the embedding model and `dimensions` can be used when the provider supports configurable dimensions.
 
 ## `ChatbotThemeTokens`
 
-Defines the individual theme colors used by the chatbot.
+Defines the individual theme values used by the chatbot.
 
 ```ts
 interface ChatbotThemeTokens {
@@ -285,23 +282,23 @@ interface ChatbotThemeTokens {
 }
 ```
 
-### Properties
+### Theme tokens
 
-| Property            | Description                                                      |
-| ------------------- | ---------------------------------------------------------------- |
-| `primaryColor`      | Primary accent color for buttons, the header, and user messages. |
-| `primaryForeground` | Text color used on primary elements.                             |
-| `background`        | Main chatbot background.                                         |
-| `foreground`        | Main chatbot text color.                                         |
-| `mutedBackground`   | Background for bot messages, inputs, and chips.                  |
-| `mutedForeground`   | Secondary text color.                                            |
-| `borderColor`       | Border color for inputs and prompt chips.                        |
+| Token               | Description                                                |
+| ------------------- | ---------------------------------------------------------- |
+| `primaryColor`      | Primary accent color for buttons, header, and user bubbles |
+| `primaryForeground` | Text color on primary elements                             |
+| `background`        | Main chat window background                                |
+| `foreground`        | Main text color                                            |
+| `mutedBackground`   | Background for bot messages, input, and chips              |
+| `mutedForeground`   | Secondary text color                                       |
+| `borderColor`       | Border color for inputs and prompt chips                   |
 
 Example:
 
 ```tsx
 const theme = {
-  primaryColor: "#18181b",
+  primaryColor: "#7c3aed",
   primaryForeground: "#ffffff",
   background: "#ffffff",
   foreground: "#18181b",
@@ -313,7 +310,7 @@ const theme = {
 
 ## `ChatbotTheme`
 
-Represents the complete chatbot theme.
+Supports flat theme tokens and separate light and dark overrides.
 
 ```ts
 type ChatbotTheme = ChatbotThemeTokens & {
@@ -322,37 +319,27 @@ type ChatbotTheme = ChatbotThemeTokens & {
 };
 ```
 
-You can provide flat theme tokens:
+Example:
 
 ```tsx
-<Chatbot theme={theme} />
+const theme = {
+  primaryColor: "#7c3aed",
+
+  light: {
+    background: "#ffffff",
+    foreground: "#18181b",
+  },
+
+  dark: {
+    background: "#18181b",
+    foreground: "#fafafa",
+  },
+};
 ```
-
-You can also define separate light and dark overrides:
-
-```tsx
-<Chatbot
-  theme={{
-    primaryColor: "#18181b",
-    light: {
-      background: "#ffffff",
-      foreground: "#18181b",
-    },
-    dark: {
-      background: "#18181b",
-      foreground: "#fafafa",
-    },
-  }}
-/>
-```
-
-The light and dark objects use the same properties as `ChatbotThemeTokens`.
-
-See [Theming](/docs/guides/theming).
 
 ## `ChatbotProps`
 
-Defines the props accepted by the `<Chatbot />` component.
+Defines the props accepted by the ready-made `<Chatbot />` component.
 
 ```ts
 interface ChatbotProps {
@@ -381,153 +368,9 @@ interface ChatbotProps {
 }
 ```
 
-### `title`
-
-```ts
-title?: string;
-```
-
-Text displayed in the chatbot header.
-
-### `subtitle`
-
-```ts
-subtitle?: string;
-```
-
-Text displayed below the main header title.
-
-### `triggerText`
-
-```ts
-triggerText?: string;
-```
-
-Text displayed inside the floating trigger button.
-
-### `triggerIcon`
-
-```ts
-triggerIcon?: ReactNode;
-```
-
-Custom icon for the floating trigger button.
-
-```tsx
-<Chatbot triggerIcon={<MyIcon />} />
-```
-
-### `sendIcon`
-
-```ts
-sendIcon?: ReactNode;
-```
-
-Custom icon for the send button.
-
-### `closeIcon`
-
-```ts
-closeIcon?: ReactNode;
-```
-
-Custom icon for the header close button.
-
-### `position`
-
-```ts
-position?:
-  | "bottom-right"
-  | "bottom-left"
-  | "top-right"
-  | "top-left";
-```
-
-Controls where the chatbot window appears.
-
-```tsx
-<Chatbot position="bottom-left" />
-```
-
-### `starterPrompts`
-
-```ts
-starterPrompts?: string[];
-```
-
-Prompts displayed when there are no messages.
-
-```tsx
-<Chatbot
-  starterPrompts={["What can you help me with?", "How do I get started?"]}
-/>
-```
-
-### `emptyStateText`
-
-```ts
-emptyStateText?: string;
-```
-
-Message displayed above the starter prompts.
-
-### `placeholder`
-
-```ts
-placeholder?: string;
-```
-
-Placeholder text for the chat input.
-
-### `starterPromptsLabel`
-
-```ts
-starterPromptsLabel?: string;
-```
-
-Label displayed above the starter prompt buttons.
-
-### `apiEndpoint`
-
-```ts
-apiEndpoint?: string;
-```
-
-API endpoint used by the chatbot.
-
-```tsx
-<Chatbot apiEndpoint="/api/chat" />
-```
-
-### `initialOpen`
-
-```ts
-initialOpen?: boolean;
-```
-
-Controls whether the chatbot starts open.
-
-```tsx
-<Chatbot initialOpen />
-```
-
-### `themeMode`
-
-```ts
-themeMode?: "auto" | "light" | "dark";
-```
-
-Controls the active theme mode.
-
-```tsx
-<Chatbot themeMode="dark" />
-```
-
-`auto` follows the system color preference.
-
 ### `classNames`
 
-Adds custom classes to selected chatbot elements.
+The ready-made chatbot accepts four custom class names:
 
 ```ts
 classNames?: {
@@ -535,7 +378,7 @@ classNames?: {
   trigger?: string;
   window?: string;
   header?: string;
-};
+}
 ```
 
 Example:
@@ -551,21 +394,23 @@ Example:
 />
 ```
 
-### `theme`
+### `themeMode`
+
+The supported values are:
 
 ```ts
-theme?: ChatbotTheme;
+themeMode?: "auto" | "light" | "dark";
 ```
 
-Provides custom theme colors.
+Use `auto` to follow the system preference.
+
+```tsx
+<Chatbot themeMode="auto" />
+```
 
 ### `onError`
 
-```ts
-onError?: (error: Error) => void;
-```
-
-Called when the chatbot encounters an error.
+Receives an `Error` when the chatbot encounters an error.
 
 ```tsx
 <Chatbot
@@ -575,105 +420,22 @@ Called when the chatbot encounters an error.
 />
 ```
 
-## Embedding provider options
-
-Each built-in embedding provider has its own optional model configuration.
-
-### `GoogleEmbeddingOptions`
-
-```ts
-interface GoogleEmbeddingOptions {
-  model?: string;
-}
-```
-
-### `OpenAIEmbeddingOptions`
-
-```ts
-interface OpenAIEmbeddingOptions {
-  model?: string;
-}
-```
-
-### `VoyageEmbeddingOptions`
-
-```ts
-interface VoyageEmbeddingOptions {
-  model?: string;
-}
-```
-
-### `CohereEmbeddingOptions`
-
-```ts
-interface CohereEmbeddingOptions {
-  model?: string;
-}
-```
-
-### `JinaEmbeddingOptions`
-
-```ts
-interface JinaEmbeddingOptions {
-  model?: string;
-}
-```
-
-### `HuggingFaceEmbeddingOptions`
-
-```ts
-interface HuggingFaceEmbeddingOptions {
-  model?: string;
-}
-```
-
-Each option allows you to override the default embedding model used by that provider.
-
-See [Providers](/docs/api/providers).
-
-## Import types
-
-You can import the public types from the main package:
-
-```tsx
-import type {
-  ChatbotProps,
-  ChatbotTheme,
-  ChatbotThemeTokens,
-  ChatRouteOptions,
-  CreateIndexOptions,
-  Document,
-  Chunk,
-  EmbeddedChunk,
-  EmbeddingIndex,
-  EmbeddingProvider,
-  RetrieveContextOptions,
-} from "react-ai-chat";
-```
-
-This keeps your application code aligned with the package's public API.
-
-## Related
+## Related documentation
 
 <Cards>
   <Card
     title="Chatbot"
-    description="Configure the ready-made chatbot component."
+    description="Complete API reference for the ready-made chatbot."
     href="/docs/api/chatbot"
   />
   <Card
-    title="ChatbotProvider"
-    description="Provide chatbot state to your custom UI."
-    href="/docs/api/chatbot-provider"
-  />
-  <Card
-    title="createChatRoute"
-    description="Create the server-side chat API route."
-    href="/docs/api/create-chat-route"
+    title="RAG"
+    description="Configure retrieval augmented generation."
+    href="/docs/guides/rag"
   />
   <Card
     title="Providers"
-    description="Configure embedding providers for RAG."
+    description="Configure embedding providers."
     href="/docs/api/providers"
   />
 </Cards>
