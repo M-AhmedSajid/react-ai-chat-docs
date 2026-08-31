@@ -1,0 +1,139 @@
+---
+title: Examples
+description: Explore practical examples of react-ai-chat for business websites, documentation, portfolios, and custom interfaces.
+---
+
+---
+
+See how `react-ai-chat` can be used in different types of applications.
+
+Each example focuses on a practical use case and shows how to combine the chatbot UI, server-side route, and optional RAG setup.
+
+## Explore the examples
+
+<Cards>
+  <Card
+    title="Business Site"
+    description="Add an AI assistant that answers questions about your services, pricing, policies, and business information."
+    href="/docs/examples/business-site"
+  />
+  <Card
+    title="Documentation Site"
+    description="Build a documentation assistant that answers questions using your project's own documentation."
+    href="/docs/examples/documentation-site"
+  />
+  <Card
+    title="Portfolio"
+    description="Help visitors explore your projects, skills, experience, and services with an AI assistant."
+    href="/docs/examples/portfolio"
+  />
+  <Card
+    title="Custom UI"
+    description="Build a completely custom chatbot interface using ChatbotProvider and useChatbotContext."
+    href="/docs/examples/custom-ui"
+  />
+</Cards>
+
+## Business site
+
+A business chatbot can help visitors find information without searching through multiple pages.
+
+It can answer questions about:
+
+```text
+Services
+Pricing
+Business hours
+Locations
+Contact information
+Policies
+Availability
+```
+
+See [Business Site](/docs/examples/business-site) for a complete RAG setup using business content.
+
+## Documentation site
+
+A documentation chatbot can search your project's documentation and provide answers based on the relevant sections.
+
+```text
+Documentation
+      ↓
+Embedding index
+      ↓
+RAG retrieval
+      ↓
+AI model
+      ↓
+Answer
+```
+
+See [Documentation Site](/docs/examples/documentation-site) for a complete documentation chatbot setup.
+
+## Portfolio
+
+A portfolio assistant can help visitors learn about your work without manually searching through every section of your portfolio.
+
+You can index information about:
+
+```text
+About
+Skills
+Experience
+Projects
+Services
+Education
+Contact
+```
+
+See [Portfolio](/docs/examples/portfolio) for a complete portfolio chatbot example.
+
+## Custom UI
+
+The ready-made `Chatbot` component handles the interface for you. Some applications need more control over the experience.
+
+With `ChatbotProvider` and `useChatbotContext()`, you can create your own:
+
+```text
+Message list
+Chat input
+Header
+Loading state
+Starter prompts
+Message components
+Actions
+Layout
+```
+
+See [Custom UI](/docs/examples/custom-ui) to build a chatbot interface around your own design system.
+
+## Choosing an example
+
+Choose the example closest to your application:
+
+| Use case               | Example                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| Business website       | [Business Site](/docs/examples/business-site)           |
+| Documentation          | [Documentation Site](/docs/examples/documentation-site) |
+| Personal portfolio     | [Portfolio](/docs/examples/portfolio)                   |
+| Fully custom interface | [Custom UI](/docs/examples/custom-ui)                   |
+
+Each example can be adapted to your own API route, model, content, and design.
+
+<Cards>
+  <Card
+    title="Getting Started"
+    description="Start with installation and build your first chatbot."
+    href="/docs/getting-started"
+  />
+  <Card
+    title="Guides"
+    description="Learn how to customize, theme, and extend react-ai-chat."
+    href="/docs/guides"
+  />
+  <Card
+    title="API Reference"
+    description="Explore the complete react-ai-chat API."
+    href="/docs/api"
+  />
+</Cards>

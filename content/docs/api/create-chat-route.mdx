@@ -5,21 +5,21 @@ description: Create a server-side streaming chat route with optional RAG support
 
 ---
 
-# createChatRoute
+## Introduction
 
 `createChatRoute()` creates a server-side `POST` handler for your chatbot.
 
-It handles message history, optional RAG retrieval, system prompts, and streaming model responses.
+It processes incoming messages, optionally retrieves relevant context with RAG, applies system instructions, and streams the model response.
 
 ## Import
 
-```tsx id="k3p8qv"
+```tsx
 import { createChatRoute } from "react-ai-chat/server";
 ```
 
 ## Basic usage
 
-```tsx id="c7m2xr"
+```tsx
 import { google } from "@ai-sdk/google";
 import { createChatRoute } from "react-ai-chat/server";
 
@@ -32,7 +32,7 @@ The returned handler can be exported directly from a framework route.
 
 For Next.js App Router:
 
-```text id="r8v4nd"
+```text
 app/
 └── api/
     └── chat/
@@ -43,13 +43,13 @@ app/
 
 ### `model`
 
-```ts id="x4q9ps"
+```ts
 model: LanguageModel;
 ```
 
 The language model used to generate responses.
 
-```tsx id="n6w2cz"
+```tsx
 createChatRoute({
   model: google("gemini-3.5-flash"),
 });
@@ -61,13 +61,13 @@ The model is provided by the AI SDK provider you choose.
 
 ### `systemPrompt`
 
-```ts id="m8k3vf"
+```ts
 systemPrompt?: string
 ```
 
 Defines the system instructions sent to the model.
 
-```tsx id="p5r7xq"
+```tsx
 createChatRoute({
   model: google("gemini-3.5-flash"),
   systemPrompt: "You are a helpful assistant for my documentation website.",
@@ -80,13 +80,13 @@ When RAG is enabled and relevant chunks are found, the retrieved context is adde
 
 ### `maxMessages`
 
-```ts id="w9c2mk"
+```ts
 maxMessages?: number
 ```
 
 Controls how many recent messages are sent to the model.
 
-```tsx id="v6p4zs"
+```tsx
 createChatRoute({
   model: google("gemini-3.5-flash"),
   maxMessages: 10,
@@ -95,17 +95,17 @@ createChatRoute({
 
 **Default:** `6`
 
-The route keeps the most recent messages up to this limit.
+The route keeps the most recent messages up to this limit before sending them to the model.
 
 ### `rag`
 
-```ts id="q2n7xd"
+```ts
 rag?: RagConfig
 ```
 
 Enables retrieval augmented generation.
 
-```tsx id="j5m8vr"
+```tsx
 createChatRoute({
   model: google("gemini-3.5-flash"),
   rag: {
@@ -118,11 +118,11 @@ createChatRoute({
 
 The RAG configuration contains:
 
-| Option     | Description                           |
-| ---------- | ------------------------------------- |
-| `index`    | Generated embedding index             |
-| `provider` | Embedding provider used for queries   |
-| `topK`     | Number of relevant chunks to retrieve |
+| Option     | Description                                   |
+| ---------- | --------------------------------------------- |
+| `index`    | Generated embedding index                     |
+| `provider` | Embedding provider used for queries           |
+| `topK`     | Maximum number of relevant chunks to retrieve |
 
 `topK` defaults to `3`.
 
@@ -132,7 +132,7 @@ See [RAG](/docs/guides/rag) for the complete setup.
 
 For Google embeddings, a complete route can look like this:
 
-```tsx id="e7x4qp"
+```tsx
 import { google } from "@ai-sdk/google";
 import { GoogleGenAI } from "@google/genai";
 import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
@@ -158,7 +158,7 @@ export const POST = createChatRoute({
 
 The embedding model is read from the generated index:
 
-```tsx id="h3n8kc"
+```tsx
 model: embeddings.model;
 ```
 
@@ -166,7 +166,7 @@ This keeps the embedding provider configuration aligned with the index.
 
 The chat model is configured independently:
 
-```tsx id="s4q9mw"
+```tsx
 model: google("gemini-3.5-flash");
 ```
 
@@ -174,7 +174,7 @@ model: google("gemini-3.5-flash");
 
 The route processes a request roughly like this:
 
-```text id="x8m2rf"
+```text
 Request
   ↓
 Read messages
@@ -194,17 +194,17 @@ Stream model response
 
 Suppose the client sends eight messages and the route uses:
 
-```tsx id="q5v7zn"
+```tsx
 maxMessages: 4;
 ```
 
-Only the latest four messages are passed through the route.
+Only the latest four messages are passed to the model.
 
-This helps control conversation context and request size.
+This helps control the amount of conversation context included in each request.
 
 ## RAG retrieval
 
-When RAG is configured, the latest user message is used as the retrieval query.
+When RAG is configured, the latest user message is used as the retrieval query for generating the query embedding.
 
 The route:
 
@@ -220,9 +220,9 @@ If no relevant context is available, the model can continue without retrieved co
 
 `createChatRoute()` returns a streaming response compatible with the AI SDK UI message stream.
 
-You do not need to manually construct the stream.
+The route handles stream creation for you, so you can export the returned handler directly from your API route.
 
-```tsx id="m7p3kx"
+```tsx
 export const POST = createChatRoute({
   model: google("gemini-3.5-flash"),
 });
@@ -230,11 +230,13 @@ export const POST = createChatRoute({
 
 ## Error handling
 
-The route handles errors internally and returns an appropriate error response.
+The route handles errors that occur during model generation and route execution.
+
+Model-related errors are converted into `ChatbotError` instances with an appropriate error code and message.
 
 RAG retrieval errors are handled separately from model generation.
 
-If retrieval fails, the error is logged and the chat request can continue without the retrieved context.
+If retrieval fails, the error is logged and the chat request continues without the retrieved context.
 
 ## Custom API endpoint
 
@@ -242,7 +244,7 @@ The API route does not need to be named `/api/chat`.
 
 For example:
 
-```text id="d4r8yc"
+```text
 app/
 └── api/
     └── assistant/
@@ -251,7 +253,7 @@ app/
 
 The route can remain:
 
-```tsx id="w6n2vz"
+```tsx
 export const POST = createChatRoute({
   model: google("gemini-3.5-flash"),
 });
@@ -259,13 +261,13 @@ export const POST = createChatRoute({
 
 Then point the chatbot to it:
 
-```tsx id="k8q5mr"
+```tsx
 <Chatbot apiEndpoint="/api/assistant" />
 ```
 
 ## Complete basic route
 
-```tsx id="u3p7xc"
+```tsx
 import { google } from "@ai-sdk/google";
 import { createChatRoute } from "react-ai-chat/server";
 

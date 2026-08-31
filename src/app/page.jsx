@@ -9,6 +9,7 @@ import {
   Database,
   Layers3,
   MessageSquare,
+  Package,
   Play,
   Rocket,
   Search,
@@ -71,126 +72,6 @@ function CodeLine({ children, muted = false }) {
       }`}
     >
       {children}
-    </div>
-  );
-}
-
-function ChatPreview() {
-  return (
-    <div className="relative mx-auto w-full max-w-5xl">
-      <div className="absolute -inset-10 -z-10 bg-[radial-gradient(circle_at_center,oklch(var(--primary)/0.14),transparent_65%)] blur-2xl" />
-
-      <div className="overflow-hidden rounded-2xl border bg-background shadow-2xl shadow-black/5">
-        <div className="flex h-12 items-center gap-2 border-b bg-muted/30 px-4">
-          <div className="flex gap-1.5">
-            <span className="size-2.5 rounded-full bg-muted-foreground/20" />
-            <span className="size-2.5 rounded-full bg-muted-foreground/20" />
-            <span className="size-2.5 rounded-full bg-muted-foreground/20" />
-          </div>
-
-          <div className="mx-auto flex items-center gap-2 rounded-md border bg-background px-3 py-1 text-[11px] text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            AI Assistant
-          </div>
-
-          <div className="size-6" />
-        </div>
-
-        <div className="grid min-h-120 md:grid-cols-[1fr_320px]">
-          <div className="flex flex-col border-b md:border-b-0 md:border-r">
-            <div className="flex-1 space-y-6 p-5 sm:p-7">
-              <div className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm">
-                  How can I customize this chatbot?
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl border bg-muted">
-                  <Sparkles className="size-4" />
-                </div>
-
-                <div className="max-w-[82%] rounded-2xl rounded-bl-md bg-muted px-4 py-3 text-sm leading-6">
-                  You can customize the theme, text, icons, position, starter
-                  prompts, API endpoint, and CSS classes.
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm">
-                  What if I need complete UI control?
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl border bg-muted">
-                  <Code2 className="size-4" />
-                </div>
-
-                <div className="max-w-[82%] rounded-2xl rounded-bl-md bg-muted px-4 py-3 text-sm leading-6">
-                  Generate the chatbot source with the CLI. The generated UI
-                  becomes part of your project, so you can edit it directly.
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-                Streaming response
-              </div>
-            </div>
-
-            <div className="border-t p-4">
-              <div className="flex items-center gap-2 rounded-xl border bg-muted/30 p-1.5">
-                <div className="flex-1 px-3 py-2 text-sm text-muted-foreground">
-                  Ask a question...
-                </div>
-
-                <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <ArrowRight className="size-4" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden flex-col bg-muted/20 md:flex">
-            <div className="border-b px-5 py-4">
-              <div className="text-xs font-medium text-muted-foreground">
-                CHATBOT
-              </div>
-              <div className="mt-1 font-semibold">Ask AI Assistant</div>
-            </div>
-
-            <div className="flex-1 p-5">
-              <div className="mb-3 text-xs font-medium text-muted-foreground">
-                Try asking:
-              </div>
-
-              <div className="space-y-2">
-                {[
-                  "What is the main tech stack?",
-                  "Tell me about key projects.",
-                  "Is this service available for work?",
-                ].map((prompt) => (
-                  <div
-                    key={prompt}
-                    className="group flex items-center justify-between rounded-xl border bg-background px-3 py-3 text-xs transition-colors hover:bg-muted"
-                  >
-                    <span>{prompt}</span>
-                    <ChevronRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-t p-5">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Zap className="size-3.5" />
-                AI SDK streaming
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -304,9 +185,10 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-7 max-w-2xl text-balance text-base leading-7 text-muted-foreground sm:text-lg">
-              Add a production-ready AI chatbot with streaming responses,
-              customizable themes, server-side model integration, and optional
-              RAG. Generate the UI source when you need complete control.
+              Add a customizable AI chatbot to your React app with streaming
+              responses, server-side model integration, and optional RAG. Start
+              with the ready-made UI or generate editable chatbot components
+              directly into your project.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -314,7 +196,7 @@ export default function HomePage() {
                 href="/docs/getting-started"
                 className={buttonVariants({ size: "lg" })}
               >
-                Start building
+                Get started
                 <ArrowRight />
               </Link>
 
@@ -329,6 +211,18 @@ export default function HomePage() {
               >
                 <GitHub />
                 View on GitHub
+              </Link>
+              <Link
+                href="https://www.npmjs.com/package/react-ai-chat"
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                })}
+              >
+                <Package />
+                View on npm
               </Link>
             </div>
 
@@ -383,24 +277,58 @@ export default function HomePage() {
         </section>
 
         {/* Product preview */}
+                {/* Interactive demo */}
         <section className="border-b bg-muted/18">
           <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
-            <div className="mx-auto mb-12 max-w-2xl text-center">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                The chatbot
+            <div className="mx-auto max-w-3xl text-center">
+              <div className="mb-3 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <MessageSquare className="size-3.5" />
+                Interactive demo
               </div>
 
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                A complete UI out of the box.
+                Try the chatbot yourself.
               </h2>
 
-              <p className="mt-4 text-muted-foreground">
-                Start with the ready-made Chatbot component. Configure the
-                experience without building the interface from scratch.
+              <p className="mt-4 leading-7 text-muted-foreground">
+                The chatbot in the bottom-right corner is powered by{" "}
+                <code className="rounded-md bg-muted px-1.5 py-0.5 text-sm text-foreground">
+                  react-ai-chat
+                </code>
+                . Open it and ask a question to see the ready-made component
+                in action.
               </p>
-            </div>
 
-            <ChatPreview />
+              <div className="mt-10 flex flex-col items-center">
+                <div className="relative flex h-40 w-full max-w-xl items-center justify-center overflow-hidden rounded-2xl border bg-background shadow-sm">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(var(--primary)/0.08),transparent_65%)]" />
+
+                  <div className="relative flex flex-col items-center gap-3">
+                    <div className="flex size-12 items-center justify-center rounded-2xl border bg-muted shadow-sm">
+                      <Bot className="size-5" />
+                    </div>
+
+                    <div className="text-sm font-medium">
+                      The chatbot is live on this page
+                    </div>
+
+                    <div className="text-xs text-muted-foreground">
+                      Look for the chat button in the bottom-right corner.
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-5 right-5 flex items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-medium shadow-lg">
+                    <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
+                    Chatbot
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
+                  <ArrowRight className="size-3.5 rotate-45" />
+                  Open the chatbot to try it
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -479,7 +407,7 @@ export default function HomePage() {
                 </div>
 
                 <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Your chatbot can become your component.
+                  Start with the UI. Own the source.
                 </h2>
 
                 <p className="mt-5 leading-7 text-muted-foreground">
@@ -555,6 +483,63 @@ export default function HomePage() {
                     The UI belongs to your project.
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Real project demo */}
+        <section className="border-b bg-muted/18">
+          <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
+              <div className="mb-3 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Real project
+              </div>
+
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                See it running in a real portfolio.
+              </h2>
+
+              <p className="mt-4 leading-7 text-muted-foreground">
+                I built an AI chatbot for my portfolio using react-ai-chat, RAG,
+                and Google Gemini. Visitors can ask questions about my projects,
+                skills, and experience.
+              </p>
+            </div>
+
+            <div className="mx-auto max-w-4xl">
+              <div className="relative w-full aspect-video">
+                <iframe
+                  className="w-full h-full rounded-lg"
+                  src="https://www.youtube.com/embed/YZPEbH7LYpE?si=c109XV41J2YMrkNE"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                ></iframe>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5" />
+                  Next.js
+                </span>
+
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5" />
+                  Google Gemini
+                </span>
+
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5" />
+                  RAG
+                </span>
+
+                <span className="flex items-center gap-1.5">
+                  <Check className="size-3.5" />
+                  react-ai-chat
+                </span>
               </div>
             </div>
           </div>
@@ -683,7 +668,7 @@ export default function HomePage() {
                 </div>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Built around React APIs and tested with these frameworks.
+                  Works with React apps using these popular frameworks.
                 </p>
               </div>
 
@@ -751,6 +736,14 @@ export default function HomePage() {
                         {'"react-ai-chat/server"'}
                       </span>
                       <span className="text-muted-foreground">;</span>
+                      {"\n"}
+                      <span className="text-muted-foreground">import </span>
+                      <span className="text-foreground">{"{ google }"}</span>
+                      <span className="text-muted-foreground">{" from "}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        {'"@ai-sdk/google"'}
+                      </span>
+                      <span className="text-muted-foreground">;</span>
                       {"\n\n"}
                       <span className="text-muted-foreground">
                         export const
@@ -761,7 +754,11 @@ export default function HomePage() {
                       <span className="text-muted-foreground">({"{"}</span>
                       {"\n"}
                       {"  "}
-                      <span className="text-foreground">model</span>
+                      <span className="text-foreground">model: google(</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        {'"gemini-3.5-flash"'}
+                      </span>
+                      <span className="text-foreground">)</span>
                       <span className="text-muted-foreground">,</span>
                       {"\n"}
                       <span className="text-muted-foreground">{"});"}</span>
@@ -821,9 +818,20 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              Open source under MIT
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                Open source under MIT
+              </div>
+
+              <Link
+                href="https://www.patreon.com/cw/mahmedsajid"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+              >
+                Support the project on Patreon
+              </Link>
             </div>
           </div>
         </section>

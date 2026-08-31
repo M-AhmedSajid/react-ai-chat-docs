@@ -3,7 +3,9 @@ title: Business Site
 description: Add an AI assistant to a business website so visitors can quickly find information about your services, products, pricing, and policies.
 ---
 
-# Business Site
+---
+
+## Overview
 
 An AI assistant can make a business website easier to explore.
 
@@ -18,7 +20,7 @@ This example uses:
 - `Chatbot` for the visitor-facing UI
 - `createChatRoute()` for the server-side API route
 - RAG for retrieving relevant business information
-- An embedding provider for indexing your content
+- An embedding provider for indexing and retrieving your content
 
 The flow looks like this:
 
@@ -100,25 +102,29 @@ The chatbot can retrieve this information when a visitor asks a related question
 <Step>
 ## 2. Generate the embedding index
 
-Use the CLI to create an embedding index from your business content.
-
-For Google:
+Use the CLI to create an embedding index from your business content:
 
 ```bash
-npx react-ai-chat --google ./content ./chatbot/embeddings.json
+npx react-ai-chat embed
 ```
 
-Other supported providers include:
+The CLI walks you through the embedding configuration.
 
-```bash
-npx react-ai-chat --openai ./content ./chatbot/embeddings.json
-npx react-ai-chat --voyage ./content ./chatbot/embeddings.json
-npx react-ai-chat --cohere ./content ./chatbot/embeddings.json
-npx react-ai-chat --jina ./content ./chatbot/embeddings.json
-npx react-ai-chat --huggingface ./content ./chatbot/embeddings.json
-```
+You select:
+
+1. Embedding provider
+2. Embedding model
+3. Output dimensions
+4. Optional fallback model
+5. Source directory
+6. Output path
+
+For example, select `./content` as the source directory and
+`./chatbot/embeddings.json` as the output path.
 
 The generated index contains the embeddings used to find relevant business information.
+
+See [CLI](/docs/guides/cli) for more details.
 
 </Step>
 
@@ -140,13 +146,21 @@ Configure `createChatRoute()`:
 
 ```tsx
 import { google } from "@ai-sdk/google";
-import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
+import { GoogleGenAI } from "@google/genai";
+import {
+  createChatRoute,
+  googleEmbedding,
+} from "react-ai-chat/server";
 
 import embeddings from "@/chatbot/embeddings.json";
 
-const model = google("gemini-2.5-flash");
+const client = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
-const embeddingProvider = googleEmbedding();
+const embeddingProvider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
 export const POST = createChatRoute({
   model,
@@ -357,11 +371,13 @@ A smaller value keeps the context focused. A larger value can help when a questi
 
 Your embedding index represents the content available when it was generated.
 
-When you change important information, regenerate it:
+When you change important information, regenerate the embedding index:
 
 ```bash
-npx react-ai-chat --google ./content ./chatbot/embeddings.json
+npx react-ai-chat embed
 ```
+
+Select the same embedding configuration and update the source and output paths as needed.
 
 This matters especially for:
 

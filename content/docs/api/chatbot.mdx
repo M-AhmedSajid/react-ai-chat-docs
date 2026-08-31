@@ -5,9 +5,22 @@ description: API reference for the ready-made Chatbot component.
 
 ---
 
-# Chatbot
+## Introduction
 
 `Chatbot` is the ready-made UI component included with `react-ai-chat`.
+
+It provides the complete chatbot interface while managing chat state internally through `ChatbotProvider`.
+
+## Import
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+```
+
+Use the stylesheet once when using the ready-made UI.
+
+## Basic usage
 
 ```tsx
 import { Chatbot } from "react-ai-chat";
@@ -18,19 +31,162 @@ export default function App() {
 }
 ```
 
-## Import
+The chatbot uses `/api/chat` as its default API endpoint.
 
-```tsx
-import { Chatbot } from "react-ai-chat";
-```
+Your server must expose a compatible `POST` handler at that endpoint.
 
-Import the stylesheet once when using the ready-made UI:
-
-```tsx
-import "react-ai-chat/style.css";
-```
+See [API Route](/docs/getting-started/api-route).
 
 ## Props
+
+### `title`
+
+```ts
+title?: string
+```
+
+The title displayed in the chatbot header.
+
+```tsx
+<Chatbot title="AI Assistant" />
+```
+
+### `subtitle`
+
+```ts
+subtitle?: string
+```
+
+The subtitle displayed below the chatbot title.
+
+```tsx
+<Chatbot subtitle="Ask me anything" />
+```
+
+### `triggerText`
+
+```ts
+triggerText?: string
+```
+
+Text displayed inside the floating trigger button when the chatbot is collapsed.
+
+```tsx
+<Chatbot triggerText="Chat with us" />
+```
+
+### `triggerIcon`
+
+```ts
+triggerIcon?: React.ReactNode
+```
+
+Custom icon rendered inside the floating trigger button.
+
+```tsx
+<Chatbot triggerIcon={<ChatIcon />} />
+```
+
+### `sendIcon`
+
+```ts
+sendIcon?: React.ReactNode
+```
+
+Custom icon used by the send button.
+
+```tsx
+<Chatbot sendIcon={<SendIcon />} />
+```
+
+### `closeIcon`
+
+```ts
+closeIcon?: React.ReactNode
+```
+
+Custom icon used by the chatbot close button.
+
+```tsx
+<Chatbot closeIcon={<CloseIcon />} />
+```
+
+### `position`
+
+```ts
+position?: "bottom-right" | "bottom-left" | "top-right" | "top-left"
+```
+
+Controls where the chatbot window and trigger are positioned.
+
+**Default:** `"bottom-right"`
+
+```tsx
+<Chatbot position="bottom-left" />
+```
+
+Supported values:
+
+```text
+bottom-right
+bottom-left
+top-right
+top-left
+```
+
+### `starterPrompts`
+
+```ts
+starterPrompts?: string[]
+```
+
+An array of prompts displayed when the conversation has no messages.
+
+```tsx
+<Chatbot
+  starterPrompts={[
+    "What can you help me with?",
+    "How does this work?",
+    "Tell me about this project",
+  ]}
+/>
+```
+
+### `emptyStateText`
+
+```ts
+emptyStateText?: string
+```
+
+Text displayed when the conversation is empty.
+
+```tsx
+<Chatbot emptyStateText="How can I help you today?" />
+```
+
+### `placeholder`
+
+```ts
+placeholder?: string
+```
+
+Placeholder text displayed inside the message input.
+
+```tsx
+<Chatbot placeholder="Ask a question..." />
+```
+
+### `starterPromptsLabel`
+
+```ts
+starterPromptsLabel?: string
+```
+
+Label displayed above the starter prompt buttons.
+
+```tsx
+<Chatbot starterPromptsLabel="Try asking" />
+```
 
 ### `apiEndpoint`
 
@@ -46,113 +202,9 @@ The server endpoint used for chat requests.
 <Chatbot apiEndpoint="/api/assistant" />
 ```
 
-Your server route must expose a compatible `POST` handler at this endpoint.
+Your server route must expose a compatible `POST` handler at the configured endpoint.
 
 See [API Route](/docs/getting-started/api-route).
-
-### `title`
-
-```ts
-title?: string
-```
-
-The title displayed in the chatbot header.
-
-### `subtitle`
-
-```ts
-subtitle?: string
-```
-
-The subtitle displayed below the chatbot title.
-
-### `triggerText`
-
-```ts
-triggerText?: string
-```
-
-Text displayed on the chatbot trigger.
-
-### `triggerIcon`
-
-```ts
-triggerIcon?: React.ReactNode
-```
-
-Custom icon rendered inside the chatbot trigger.
-
-```tsx
-<Chatbot triggerIcon={<ChatIcon />} />
-```
-
-### `sendIcon`
-
-```ts
-sendIcon?: React.ReactNode
-```
-
-Custom icon used for the send action.
-
-### `closeIcon`
-
-```ts
-closeIcon?: React.ReactNode
-```
-
-Custom icon used to close the chatbot.
-
-### `position`
-
-```ts
-position?: "bottom-right" | "bottom-left" | "top-right" | "top-left"
-```
-
-Controls where the chatbot is positioned.
-
-**Default:** `"bottom-right"`
-
-```tsx
-<Chatbot position="bottom-left" />
-```
-
-### `starterPrompts`
-
-```ts
-starterPrompts?: string[]
-```
-
-Questions displayed when the conversation is empty.
-
-```tsx
-<Chatbot
-  starterPrompts={["What can you help me with?", "How does this work?"]}
-/>
-```
-
-### `emptyStateText`
-
-```ts
-emptyStateText?: string
-```
-
-Text displayed when the conversation has no messages.
-
-### `placeholder`
-
-```ts
-placeholder?: string
-```
-
-Placeholder displayed inside the message input.
-
-### `starterPromptsLabel`
-
-```ts
-starterPromptsLabel?: string
-```
-
-Label displayed above the starter prompts.
 
 ### `initialOpen`
 
@@ -160,7 +212,7 @@ Label displayed above the starter prompts.
 initialOpen?: boolean
 ```
 
-Controls whether the chatbot is open when it first renders.
+Controls whether the chatbot window is open when it first renders.
 
 **Default:** `false`
 
@@ -171,39 +223,36 @@ Controls whether the chatbot is open when it first renders.
 ### `themeMode`
 
 ```ts
-themeMode?: "system" | "light" | "dark"
+themeMode?: "auto" | "light" | "dark"
 ```
 
 Controls the chatbot's color mode.
 
-**Default:** `"system"`
+**Default:** `"auto"`
 
 ```tsx
 <Chatbot themeMode="dark" />
 ```
 
-### `theme`
+Supported values:
 
-```ts
-theme?: ChatbotTheme
-```
+| Value   | Behavior                                   |
+| ------- | ------------------------------------------ |
+| `auto`  | Follows the user's system color preference |
+| `light` | Always uses the light theme                |
+| `dark`  | Always uses the dark theme                 |
 
-Customizes the chatbot's theme tokens.
-
-```tsx
-<Chatbot
-  theme={{
-    primary: "#7c3aed",
-  }}
-/>
-```
-
-See [Theming](/docs/guides/theming) for details.
+See [Theming](/docs/guides/theming).
 
 ### `classNames`
 
 ```ts
-classNames?: ChatbotClassNames
+classNames?: {
+  wrapper?: string;
+  trigger?: string;
+  window?: string;
+  header?: string;
+}
 ```
 
 Provides custom CSS classes for supported chatbot elements.
@@ -211,12 +260,47 @@ Provides custom CSS classes for supported chatbot elements.
 ```tsx
 <Chatbot
   classNames={{
-    container: "my-chatbot",
+    wrapper: "my-chatbot",
     trigger: "my-trigger",
-    panel: "my-panel",
+    window: "my-window",
+    header: "my-header",
   }}
 />
 ```
+
+Available keys:
+
+| Key       | Element               |
+| --------- | --------------------- |
+| `wrapper` | Root chatbot wrapper  |
+| `trigger` | Floating chat trigger |
+| `window`  | Chat window           |
+| `header`  | Chat window header    |
+
+See [Customization](/docs/guides/customization).
+
+### `theme`
+
+```ts
+theme?: ChatbotTheme
+```
+
+Customizes the chatbot's visual theme.
+
+```tsx
+<Chatbot
+  theme={{
+    primaryColor: "#7c3aed",
+    primaryForeground: "#ffffff",
+    background: "#ffffff",
+    foreground: "#111827",
+  }}
+/>
+```
+
+The theme supports general tokens as well as light and dark mode overrides.
+
+See [Theming](/docs/guides/theming) for the complete `ChatbotTheme` API.
 
 ### `onError`
 
@@ -229,10 +313,12 @@ Called when the chatbot encounters an error.
 ```tsx
 <Chatbot
   onError={(error) => {
-    console.error(error);
+    console.error("Chatbot error:", error);
   }}
 />
 ```
+
+This can be used to connect the chatbot to application-specific error handling or logging.
 
 ## Complete example
 
@@ -256,7 +342,17 @@ export default function App() {
       emptyStateText="How can I help you?"
       placeholder="Type your question..."
       starterPromptsLabel="Try asking"
-      themeMode="system"
+      themeMode="auto"
+      theme={{
+        primaryColor: "#7c3aed",
+        primaryForeground: "#ffffff",
+      }}
+      classNames={{
+        wrapper: "my-chatbot",
+        trigger: "my-trigger",
+        window: "my-window",
+        header: "my-header",
+      }}
       onError={(error) => {
         console.error(error);
       }}
@@ -265,10 +361,72 @@ export default function App() {
 }
 ```
 
+## Type definition
+
+The complete public props interface is:
+
+```tsx
+export interface ChatbotProps {
+  title?: string;
+  subtitle?: string;
+  triggerText?: string;
+  triggerIcon?: ReactNode;
+  sendIcon?: ReactNode;
+  closeIcon?: ReactNode;
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  starterPrompts?: string[];
+  emptyStateText?: string;
+  placeholder?: string;
+  starterPromptsLabel?: string;
+  apiEndpoint?: string;
+  initialOpen?: boolean;
+  themeMode?: "auto" | "light" | "dark";
+  classNames?: {
+    wrapper?: string;
+    trigger?: string;
+    window?: string;
+    header?: string;
+  };
+  theme?: ChatbotTheme;
+  onError?: (error: Error) => void;
+}
+```
+
+## Ready-made UI vs generated UI
+
+Use `<Chatbot />` when you want a complete chatbot interface that can be configured through props.
+
+If you need to change the internal component structure, generate the chatbot source into your project:
+
+```bash
+npx react-ai-chat init
+```
+
+The generated UI gives you editable React components and CSS while using the package's chatbot context APIs.
+
+See [Generated Chatbot](/docs/guides/generated-chatbot).
+
 ## Related APIs
 
-- [Chatbot Provider](/docs/api/chatbot-provider)
-- [useChatbotContext](/docs/api/use-chatbot-context)
-- [createChatRoute](/docs/api/create-chat-route)
-- [Theming](/docs/guides/theming)
-- [Customization](/docs/guides/customization)
+<Cards>
+  <Card
+    title="Chatbot Provider"
+    description="Provide chatbot state and configuration to custom components."
+    href="/docs/api/chatbot-provider"
+  />
+  <Card
+    title="useChatbotContext"
+    description="Access chatbot state and actions from custom components."
+    href="/docs/api/use-chatbot-context"
+  />
+  <Card
+    title="createChatRoute"
+    description="Create the server-side chat endpoint."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="Theming"
+    description="Customize chatbot colors and theme modes."
+    href="/docs/guides/theming"
+  />
+</Cards>

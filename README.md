@@ -1,56 +1,82 @@
 # react-ai-chat Docs
 
-Official documentation for [`react-ai-chat`](https://github.com/M-AhmedSajid/react-ai-chat).
+Official documentation for [`react-ai-chat`](https://github.com/M-AhmedSajid/react-ai-chat), a React AI chatbot package for building customizable AI chat experiences.
 
-`react-ai-chat` is a React AI chatbot package with a ready-made chatbot UI, editable generated components, server-side chat routes, AI provider support, and RAG.
+The package includes a ready-made chatbot UI, customizable generated components, server-side chat routes, AI provider integrations, and RAG support.
 
 ## Documentation
 
-The documentation website is available at:
+**[Read the react-ai-chat Documentation](https://react-ai-chat-docs.vercel.app/)**
 
-**[react-ai-chat Documentation](https://react-ai-chat-docs.vercel.app/)**
+The documentation covers everything from installing the package to building custom chatbot interfaces and connecting your own knowledge base.
 
-## What's in the documentation?
+## What you'll find
 
-The docs cover:
+### Getting Started
 
-- Getting started with `react-ai-chat`
-- Installation and quick start
-- CLI commands and options
-- Generated chatbot setup
-- RAG and embedding indexes
-- Embedding providers
-- Chatbot customization
+- Installation
+- Quick start
+- Chatbot UI
+- API route setup
+
+### Guides
+
+- CLI
+- Generated chatbot
+- Customization
 - Theming
-- Server-side chat routes
-- API reference
+- RAG
+- Embedding indexes
+
+### API Reference
+
+- `Chatbot`
+- `ChatbotProvider`
+- `useChatbotContext`
+- `createChatRoute`
+- Embedding providers
 - TypeScript types
 - Error handling
 
-For package installation and usage, see the documentation website or the [main package repository](https://github.com/M-AhmedSajid/react-ai-chat).
+### Examples
+
+- Business website
+- Documentation site
+- Portfolio
+- Custom UI
+
+## Quick Links
+
+- **[Documentation](https://react-ai-chat-docs.vercel.app/)**
+- **[Getting Started](https://react-ai-chat-docs.vercel.app/docs/getting-started)**
+- **[Guides](https://react-ai-chat-docs.vercel.app/docs/guides)**
+- **[API Reference](https://react-ai-chat-docs.vercel.app/docs/api)**
+- **[Examples](https://react-ai-chat-docs.vercel.app/docs/examples)**
+- **[react-ai-chat Repository](https://github.com/M-AhmedSajid/react-ai-chat)**
 
 ## Development
 
-### Clone the repository
+Clone the documentation repository:
 
 ```bash
 git clone https://github.com/M-AhmedSajid/react-ai-chat-docs.git
+
 cd react-ai-chat-docs
 ```
 
-### Install dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Start the development server
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-The documentation site will be available at the local URL shown in your terminal.
+Open the local URL shown in your terminal.
 
 ### Build
 
@@ -64,21 +90,25 @@ npm run build
 npm run start
 ```
 
-## Documentation structure
+## Documentation Structure
 
-Documentation content is written with MDX.
+Documentation is written in MDX and organized by topic:
 
 ```text
 content/
 └── docs/
     ├── getting-started/
     ├── guides/
-    └── api/
+    ├── api/
+    ├── examples/
+    └── more/
 ```
 
-- `getting-started` contains installation and quick start guides.
-- `guides` contains CLI, RAG, customization, theming, and generated chatbot documentation.
-- `api` contains component, server, provider, type, and error references.
+- `getting-started` contains installation, quick start, chatbot UI, and API route guides.
+- `guides` contains CLI, RAG, customization, theming, and generated chatbot guides.
+- `api` contains component, provider, server route, type, and error references.
+- `examples` contains practical chatbot implementations.
+- `more` contains FAQs and troubleshooting.
 
 ## Tech Stack
 
@@ -97,17 +127,27 @@ This documentation site is built with:
 
 [github.com/M-AhmedSajid/react-ai-chat](https://github.com/M-AhmedSajid/react-ai-chat)
 
+The main package repository containing the source code, releases, issues, and package development.
+
 ### Documentation
 
 [github.com/M-AhmedSajid/react-ai-chat-docs](https://github.com/M-AhmedSajid/react-ai-chat-docs)
 
+This repository contains the documentation website and its MDX content.
+
 ## Contributing
 
-Found an issue in the documentation?
+Found an issue with the documentation?
 
 Open an issue or submit a pull request in this repository.
 
-For package bugs, feature requests, or issues related to `react-ai-chat`, use the [main package repository](https://github.com/M-AhmedSajid/react-ai-chat).
+For package bugs, feature requests, or issues with `react-ai-chat`, use the [main package repository](https://github.com/M-AhmedSajid/react-ai-chat).
+
+## Support
+
+If you find `react-ai-chat` useful and want to support its development, you can become a patron.
+
+[Support me on Patreon](https://www.patreon.com/cw/mahmedsajid)
 
 ## License
 

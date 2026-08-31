@@ -1,19 +1,19 @@
 ---
 title: ChatbotProvider
-description: API reference for managing chatbot state with ChatbotProvider.
+description: API reference for managing chatbot state and configuration with ChatbotProvider.
 ---
 
 ---
 
-# ChatbotProvider
+## Introduction
 
-`ChatbotProvider` provides the state and actions used by the generated chatbot UI.
+`ChatbotProvider` provides the state, configuration, and actions used by custom chatbot interfaces.
 
-It is useful when you want to build your own chatbot interface while keeping `react-ai-chat` responsible for chat state and communication with your API route.
+It is useful when you want to build your own chatbot UI while keeping `react-ai-chat` responsible for chat state, theme configuration, and communication with your API route.
 
 ## Import
 
-```tsx id="y6jv3q"
+```tsx
 import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
 ```
 
@@ -21,15 +21,15 @@ import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
 
 Wrap your chatbot UI with `ChatbotProvider`:
 
-```tsx id="w9h4kc"
+```tsx
 <ChatbotProvider>
   <YourChatbot />
 </ChatbotProvider>
 ```
 
-Components inside the provider can then access the chatbot state through `useChatbotContext()`.
+Components inside the provider can then access the chatbot state and actions through `useChatbotContext()`.
 
-```tsx id="j3v7sx"
+```tsx
 function YourChatbot() {
   const { messages, input, setInput, handleSubmit, isLoading } =
     useChatbotContext();
@@ -38,15 +38,29 @@ function YourChatbot() {
 }
 ```
 
-## Provider options
+## Provider props
 
-`ChatbotProvider` accepts the configuration required by the chatbot state.
+`ChatbotProvider` accepts configuration for the API endpoint, initial state, position, theme, and error handling.
 
-The generated chatbot uses the provider internally, so you usually only need to use it directly when building a custom UI.
+### `children`
+
+```ts
+children: React.ReactNode;
+```
+
+The chatbot UI rendered inside the provider.
+
+```tsx
+<ChatbotProvider>
+  <CustomChatbot />
+</ChatbotProvider>
+```
+
+This is required.
 
 ### `apiEndpoint`
 
-```ts id="s8f2qd"
+```ts
 apiEndpoint?: string
 ```
 
@@ -54,139 +68,475 @@ The endpoint used for chat requests.
 
 **Default:** `"/api/chat"`
 
-```tsx id="x4m7pk"
+```tsx
 <ChatbotProvider apiEndpoint="/api/assistant">
-  <YourChatbot />
+  <CustomChatbot />
 </ChatbotProvider>
 ```
+
+Your server route must expose a compatible `POST` handler at this endpoint.
+
+See [API Route](/docs/getting-started/api-route).
+
+### `initialOpen`
+
+```ts
+initialOpen?: boolean
+```
+
+Controls whether the chatbot starts in the open state.
+
+**Default:** `false`
+
+```tsx
+<ChatbotProvider initialOpen>
+  <CustomChatbot />
+</ChatbotProvider>
+```
+
+### `position`
+
+```ts
+position?: "bottom-right" | "bottom-left" | "top-right" | "top-left"
+```
+
+Sets the chatbot position.
+
+**Default:** `"bottom-right"`
+
+```tsx
+<ChatbotProvider position="bottom-left">
+  <CustomChatbot />
+</ChatbotProvider>
+```
+
+The position is available through `useChatbotContext()`.
+
+### `themeMode`
+
+```ts
+themeMode?: "auto" | "light" | "dark"
+```
+
+Controls the chatbot's color mode.
+
+**Default:** `"auto"`
+
+```tsx
+<ChatbotProvider themeMode="dark">
+  <CustomChatbot />
+</ChatbotProvider>
+```
+
+With `"auto"`, the chatbot follows the user's system color preference.
+
+### `theme`
+
+```ts
+theme?: ChatbotTheme
+```
+
+Provides custom theme token overrides.
+
+```tsx
+<ChatbotProvider
+  theme={{
+    primaryColor: "#7c3aed",
+    primaryForeground: "#ffffff",
+  }}
+>
+  <CustomChatbot />
+</ChatbotProvider>
+```
+
+See [Theming](/docs/guides/theming) for the available theme tokens.
+
+### `onError`
+
+```ts
+onError?: (error: Error) => void
+```
+
+Called when the chatbot encounters an error.
+
+```tsx
+<ChatbotProvider
+  onError={(error) => {
+    console.error("Chatbot error:", error);
+  }}
+>
+  <CustomChatbot />
+</ChatbotProvider>
+```
+
+You can use this callback to connect chatbot errors to your application's error reporting.
+
+See [Errors](/docs/api/errors) for the available error types and codes.
 
 ## Context
 
 Use `useChatbotContext()` inside a `ChatbotProvider` to access the chatbot state and actions.
 
-```tsx id="v2n9cz"
+```tsx
 const {
-  messages,
-  input,
-  setInput,
-  handleSubmit,
-  isLoading,
   isOpen,
   setIsOpen,
+  input,
+  setInput,
+  messages,
+  status,
+  isLoading,
+  handleSubmit,
+  position,
+  themeMode,
+  themeStyles,
 } = useChatbotContext();
 ```
 
-### `messages`
+The context provides the following values.
 
-The current conversation messages.
+### `isOpen`
 
-```ts id="j7c4mx"
-messages;
+Indicates whether the chatbot is currently open.
+
+```ts
+isOpen: boolean;
 ```
 
-Use this value to render the conversation.
+```tsx
+const { isOpen } = useChatbotContext();
 
-```tsx id="q9s2vr"
-{
-  messages.map((message) => (
-    <div key={message.id}>
-      {message.role}: {message.content}
-    </div>
-  ));
-}
+return <p>{isOpen ? "Chat is open" : "Chat is closed"}</p>;
+```
+
+### `setIsOpen`
+
+Updates the chatbot's open state.
+
+```ts
+setIsOpen: (open: boolean) => void;
+```
+
+Open the chatbot:
+
+```tsx
+<button onClick={() => setIsOpen(true)}>Open chat</button>
+```
+
+Close it:
+
+```tsx
+<button onClick={() => setIsOpen(false)}>Close chat</button>
 ```
 
 ### `input`
 
 The current value of the message input.
 
-```ts id="n5d8wp"
+```ts
 input: string;
+```
+
+```tsx
+<input value={input} />
 ```
 
 ### `setInput`
 
 Updates the message input.
 
-```ts id="a3f6ky"
-setInput: (value: string) => void
+```ts
+setInput: (input: string) => void;
 ```
 
 Example:
 
-```tsx id="c8m2zr"
+```tsx
 <input value={input} onChange={(event) => setInput(event.target.value)} />
 ```
 
-### `handleSubmit`
+### `messages`
 
-Submits the current message.
+The current conversation messages.
 
-```ts id="f4q8nb"
-handleSubmit: () => void
+```ts
+messages: ReturnType < typeof useChat > ["messages"];
 ```
 
-Example:
+The messages use the AI SDK message structure.
 
-```tsx id="u7x1mc"
-<button onClick={handleSubmit}>Send</button>
+```tsx
+{
+  messages.map((message) => (
+    <div key={message.id}>
+      {message.parts.map((part, index) =>
+        part.type === "text" ? <p key={index}>{part.text}</p> : null,
+      )}
+    </div>
+  ));
+}
 ```
+
+### `status`
+
+The current status of the chat request.
+
+```ts
+status: ReturnType < typeof useChat > ["status"];
+```
+
+You can use the status to determine the current state of the chat request.
+
+```tsx
+const { status } = useChatbotContext();
+
+return <p>Status: {status}</p>;
+```
+
+The exact status values are provided by the AI SDK version used by `react-ai-chat`.
 
 ### `isLoading`
 
-Indicates whether the chatbot is waiting for a response.
+Indicates whether the chatbot is currently generating a response.
 
-```ts id="e6r3pv"
+```ts
 isLoading: boolean;
 ```
 
-Use it to disable controls or display a loading indicator:
+Use it to disable controls or display a loading state:
 
-```tsx id="k2z5wd"
+```tsx
 {
   isLoading && <span>Thinking...</span>;
 }
 ```
 
-### `isOpen`
+For example:
 
-Indicates whether the chatbot UI is currently open.
-
-```ts id="p8v4qs"
-isOpen: boolean;
+```tsx
+<button disabled={isLoading}>{isLoading ? "Thinking..." : "Send"}</button>
 ```
 
-### `setIsOpen`
+### `handleSubmit`
 
-Controls the open state.
+Submits the current input and starts a chat request.
 
-```ts id="m6x9rt"
-setIsOpen: (open: boolean) => void
+```ts
+handleSubmit: (e?: SubmitEvent<HTMLFormElement>, customText?: string) =>
+  Promise<void>;
 ```
 
-Example:
+It can be used directly from a button:
 
-```tsx id="z3c7hf"
-<button onClick={() => setIsOpen(true)}>Open chat</button>
+```tsx
+<button onClick={() => handleSubmit()}>Send</button>
 ```
 
-## Custom chatbot example
+When used with a form, pass the submit event:
 
-You can combine the provider and context to build your own interface:
+```tsx
+<form
+  onSubmit={(event) => {
+    event.preventDefault();
+    handleSubmit(event);
+  }}
+>
+  <button type="submit">Send</button>
+</form>
+```
 
-```tsx id="r5k8nd"
-import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
+You can also submit custom text:
 
-function CustomChatbot() {
-  const { messages, input, setInput, handleSubmit, isLoading } =
-    useChatbotContext();
+```tsx
+<button onClick={() => handleSubmit(undefined, "Tell me about this project")}>
+  Ask about the project
+</button>
+```
+
+### `position`
+
+The current chatbot position.
+
+```ts
+position:
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+```
+
+The value comes from the provider configuration.
+
+```tsx
+const { position } = useChatbotContext();
+
+return <div data-position={position}>...</div>;
+```
+
+### `themeMode`
+
+The active chatbot theme mode.
+
+```ts
+themeMode: "auto" | "light" | "dark";
+```
+
+```tsx
+const { themeMode } = useChatbotContext();
+
+return <p>Theme: {themeMode}</p>;
+```
+
+### `themeStyles`
+
+The computed theme styles for the chatbot.
+
+```ts
+themeStyles: React.CSSProperties;
+```
+
+These styles contain the CSS custom properties generated from the configured theme.
+
+They can be applied to a custom chatbot container:
+
+```tsx
+const { themeStyles } = useChatbotContext();
+
+return <section style={themeStyles}>{/* Custom chatbot UI */}</section>;
+```
+
+This allows a custom interface to use the same theme configuration provided to `ChatbotProvider`.
+
+## Building a custom input
+
+The context API makes it possible to replace the generated input with your own component.
+
+```tsx
+function CustomInput() {
+  const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        handleSubmit(event);
+      }}
+    >
+      <input
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        placeholder="Ask a question..."
+      />
+
+      <button type="submit" disabled={isLoading || !input.trim()}>
+        {isLoading ? "Thinking..." : "Send"}
+      </button>
+    </form>
+  );
+}
+```
+
+## Building a custom message list
+
+You can control how messages are rendered.
+
+```tsx
+function CustomMessages() {
+  const { messages } = useChatbotContext();
 
   return (
     <div>
+      {messages.map((message) => (
+        <div key={message.id}>
+          <strong>{message.role}</strong>
+
+          <div>
+            {message.parts.map((part, index) =>
+              part.type === "text" ? <p key={index}>{part.text}</p> : null,
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+This lets you control the presentation while the provider continues to manage the conversation.
+
+## Building a custom trigger
+
+You can use the open state to create your own trigger:
+
+```tsx
+function CustomTrigger() {
+  const { isOpen, setIsOpen } = useChatbotContext();
+
+  return (
+    <button onClick={() => setIsOpen(!isOpen)}>
+      {isOpen ? "Close chat" : "Open chat"}
+    </button>
+  );
+}
+```
+
+## Using theme styles
+
+You can apply the computed theme styles to your custom UI:
+
+```tsx
+function CustomChatbot() {
+  const { themeStyles, themeMode } = useChatbotContext();
+
+  return (
+    <section style={themeStyles} data-theme={themeMode}>
+      <h2>AI Assistant</h2>
+    </section>
+  );
+}
+```
+
+This is useful when building a custom interface that should use the same theme configuration as the provider.
+
+## Full custom UI
+
+The provider and context can be combined to create an entire chatbot interface:
+
+```tsx
+import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
+
+function CustomChatbot() {
+  const {
+    messages,
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+    isOpen,
+    setIsOpen,
+    themeStyles,
+  } = useChatbotContext();
+
+  if (!isOpen) {
+    return <button onClick={() => setIsOpen(true)}>Open chat</button>;
+  }
+
+  return (
+    <section style={themeStyles}>
+      <header>
+        <h2>AI Assistant</h2>
+
+        <button onClick={() => setIsOpen(false)}>Close</button>
+      </header>
+
       <div>
         {messages.map((message) => (
           <div key={message.id}>
-            {message.role}: {message.content}
+            <strong>{message.role}</strong>
+
+            {message.parts.map((part, index) =>
+              part.type === "text" ? <p key={index}>{part.text}</p> : null,
+            )}
           </div>
         ))}
       </div>
@@ -194,7 +544,7 @@ function CustomChatbot() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          handleSubmit();
+          handleSubmit(event);
         }}
       >
         <input
@@ -204,37 +554,33 @@ function CustomChatbot() {
         />
 
         <button type="submit" disabled={isLoading || !input.trim()}>
-          Send
+          {isLoading ? "Thinking..." : "Send"}
         </button>
       </form>
-    </div>
+    </section>
   );
 }
 
 export default function App() {
   return (
-    <ChatbotProvider apiEndpoint="/api/chat">
+    <ChatbotProvider
+      apiEndpoint="/api/chat"
+      position="bottom-right"
+      themeMode="auto"
+    >
       <CustomChatbot />
     </ChatbotProvider>
   );
 }
 ```
 
-## Provider vs ready-made Chatbot
-
-Use `<Chatbot />` when you want the complete built-in interface.
-
-Use `ChatbotProvider` when you want to build the interface yourself while using the package's chat state and request handling.
-
-The generated chatbot uses this approach internally.
-
-## Important
+## Provider requirement
 
 `useChatbotContext()` must be called from a component rendered inside `ChatbotProvider`.
 
 This will cause an error:
 
-```tsx id="y5c2jx"
+```tsx
 function MyComponent() {
   const context = useChatbotContext();
 
@@ -246,19 +592,144 @@ when `MyComponent` is rendered without a provider.
 
 Wrap it with:
 
-```tsx id="v8n4kc"
+```tsx
 <ChatbotProvider>
   <MyComponent />
 </ChatbotProvider>
 ```
 
-## Next steps
+## Provider vs ready-made Chatbot
+
+Use `<Chatbot />` when you want the complete built-in interface.
+
+Use `ChatbotProvider` when you want to build the interface yourself while using `react-ai-chat` for chat state, request handling, configuration, and theme information.
+
+The generated chatbot uses this approach internally.
+
+## Complete provider example
+
+```tsx
+import {
+  ChatbotProvider,
+  useChatbotContext,
+} from "react-ai-chat";
+
+function CustomChatbot() {
+  const {
+    messages,
+    input,
+    setInput,
+    handleSubmit,
+    isLoading,
+    isOpen,
+    setIsOpen,
+    position,
+    themeMode,
+    themeStyles,
+  } = useChatbotContext();
+
+  return (
+    <section
+      style={themeStyles}
+      data-position={position}
+      data-theme={themeMode}
+    >
+      {!isOpen ? (
+        <button onClick={() => setIsOpen(true)}>
+          Open chat
+        </button>
+      ) : (
+        <>
+          <header>
+            <h2>AI Assistant</h2>
+            <button onClick={() => setIsOpen(false)}>
+              Close
+            </button>
+          </header>
+
+          <div>
+            {messages.map((message) => (
+              <div key={message.id}>
+                {message.parts.map((part, index) =>
+                  part.type === "text" ? (
+                    <p key={index}>{part.text}</p>
+                  ) : null,
+                )}
+              </div>
+            )}
+          </div>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSubmit(event);
+            }}
+          >
+            <input
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+            />
+
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+            >
+              {isLoading ? "Thinking..." : "Send"}
+            </button>
+          </form>
+        </>
+      )}
+    </section>
+  );
+}
+
+export default function App() {
+  return (
+    <ChatbotProvider
+      apiEndpoint="/api/chat"
+      initialOpen={false}
+      position="bottom-right"
+      themeMode="auto"
+      theme={{
+        primaryColor: "#7c3aed",
+        primaryForeground: "#ffffff",
+      }}
+      onError={(error) => {
+        console.error("Chatbot error:", error);
+      }}
+    >
+      <CustomChatbot />
+    </ChatbotProvider>
+  );
+}
+```
+
+## When to use this API
+
+Use `ChatbotProvider` when you need custom control over the chatbot UI while keeping the package's state and request handling.
+
+For a complete ready-made interface, use [`<Chatbot />`](/docs/api/chatbot).
+
+For an editable starting point, use the generated chatbot:
+
+```bash
+npx react-ai-chat init
+```
+
+The generated components are built around `ChatbotProvider` and `useChatbotContext()`.
+
+## Related APIs
 
 <Cards>
   <Card
     title="useChatbotContext"
     description="Explore the state and actions available inside the provider."
     href="/docs/api/use-chatbot-context"
+  />
+  <Card
+    title="Chatbot"
+    description="Use the complete ready-made chatbot interface."
+    href="/docs/api/chatbot"
   />
   <Card
     title="Generated Chatbot"

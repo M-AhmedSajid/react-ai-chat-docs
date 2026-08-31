@@ -3,7 +3,9 @@ title: Documentation Site
 description: Build a documentation chatbot that answers questions using your project's own documentation.
 ---
 
-# Documentation Site
+---
+
+## Overview
 
 A documentation chatbot is one of the most useful ways to use `react-ai-chat`.
 
@@ -81,7 +83,7 @@ AI response
 
 The complete documentation site is available on GitHub:
 
-[react-ai-chat-docs on GitHub](https://github.com/M-AhmedSajid/react-ai-chat-docs?utm_source=chatgpt.com)
+[react-ai-chat-docs on GitHub](https://github.com/M-AhmedSajid/react-ai-chat-docs)
 
 You can use it as a reference when setting up `react-ai-chat` for your own documentation site.
 
@@ -126,38 +128,33 @@ Then import the Chatbot component and its stylesheet.
 <Step>
 ## 2. Generate the embedding index
 
-Choose an embedding provider and run the CLI.
-
-For Google:
+Run the embedding command:
 
 ```bash
-npx react-ai-chat --google
+npx react-ai-chat embed
 ```
 
-You can also use the other supported providers:
+The CLI guides you through the embedding setup:
 
-```bash
-npx react-ai-chat --openai
-npx react-ai-chat --voyage
-npx react-ai-chat --cohere
-npx react-ai-chat --jina
-npx react-ai-chat --huggingface
-```
+1. Select an embedding provider.
+2. Select the primary embedding model.
+3. Select the embedding dimensions.
+4. Optionally select a fallback model.
+5. Select the directory containing your documentation.
+6. Select the output path for the embedding index.
 
-The CLI processes your documentation, creates chunks, generates embeddings, and writes the resulting index.
+The current indexing pipeline processes Markdown and MDX files.
 
-You can also specify custom input and output paths:
-
-```bash
-npx react-ai-chat --google ./docs ./chatbot/embeddings.json
-```
-
-Your project can then contain:
+For example, your project can contain:
 
 ```text
 chatbot/
 └── embeddings.json
 ```
+
+The generated index contains the document chunks, embeddings, and embedding configuration used during generation.
+
+See [CLI](/docs/guides/cli) for the complete setup.
 
 </Step>
 
@@ -206,17 +203,19 @@ import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
 
 import embeddings from "@/chatbot/embeddings.json";
 
-const model = google("gemini-2.5-flash");
-
 const client = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const embeddingProvider = googleEmbedding(client);
+const embeddingProvider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
 export const POST = createChatRoute({
-  model,
+  model: google("gemini-3.5-flash"),
+
   systemPrompt: "You are a helpful assistant for our documentation website.",
+
   rag: {
     index: embeddings,
     provider: embeddingProvider,
@@ -312,7 +311,7 @@ The embedding index represents the documentation at the time it was generated.
 When you change your documentation, regenerate the index:
 
 ```bash
-npx react-ai-chat --google
+npx react-ai-chat embed
 ```
 
 For a production documentation site, add this step to the workflow that publishes your documentation.
@@ -433,16 +432,16 @@ import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
 
 import embeddings from "@/chatbot/embeddings.json";
 
-const model = google("gemini-2.5-flash");
-
 const client = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const embeddingProvider = googleEmbedding(client);
+const embeddingProvider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
 export const POST = createChatRoute({
-  model,
+  model: google("gemini-3.5-flash"),
 
   systemPrompt: `
     You are a helpful documentation assistant.

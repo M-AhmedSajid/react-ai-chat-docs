@@ -5,7 +5,7 @@ description: TypeScript types exported and used by react-ai-chat.
 
 ---
 
-# Types
+## Overview
 
 `react-ai-chat` provides TypeScript types for embedding providers, RAG indexes, chatbot configuration, and theme customization.
 
@@ -29,18 +29,23 @@ Defines the interface required by an embedding provider.
 interface EmbeddingProvider {
   name: string;
   model: string;
+  maxBatchSize: number;
 
   embed(text: string, type?: "document" | "query"): Promise<number[]>;
+
+  embedMany?(texts: string[], type?: "document" | "query"): Promise<number[][]>;
 }
 ```
 
 ### Properties
 
-| Property | Type     | Description                   |
-| -------- | -------- | ----------------------------- |
-| `name`   | `string` | Provider name                 |
-| `model`  | `string` | Embedding model               |
-| `embed`  | function | Generates an embedding vector |
+| Property       | Type       | Description                                    |
+| -------------- | ---------- | ---------------------------------------------- |
+| `name`         | `string`   | Provider name                                  |
+| `model`        | `string`   | Embedding model                                |
+| `maxBatchSize` | `number`   | Maximum number of texts supported per batch    |
+| `embed`        | `function` | Generates an embedding vector for one text     |
+| `embedMany`    | `function` | Optionally generates embeddings for many texts |
 
 The optional `type` argument identifies whether the text is being embedded as a document or query.
 
@@ -133,17 +138,19 @@ interface CreateIndexOptions {
   fallbackProvider?: EmbeddingProvider;
   documentsPath?: string;
   outputPath?: string;
+  embeddingBatchSize?: number;
 }
 ```
 
 ### Properties
 
-| Property           | Type                | Description                 |
-| ------------------ | ------------------- | --------------------------- |
-| `provider`         | `EmbeddingProvider` | Primary embedding provider  |
-| `fallbackProvider` | `EmbeddingProvider` | Optional fallback provider  |
-| `documentsPath`    | `string`            | Source documents directory  |
-| `outputPath`       | `string`            | Generated index output path |
+| Property             | Type                | Description                                      |
+| -------------------- | ------------------- | ------------------------------------------------ |
+| `provider`           | `EmbeddingProvider` | Primary embedding provider                       |
+| `fallbackProvider`   | `EmbeddingProvider` | Optional fallback provider                       |
+| `documentsPath`      | `string`            | Source documents directory                       |
+| `outputPath`         | `string`            | Generated index output path                      |
+| `embeddingBatchSize` | `number`            | Optional batch size used during index generation |
 
 ## `RetrieveContextOptions`
 

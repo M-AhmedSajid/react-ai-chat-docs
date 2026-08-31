@@ -1,0 +1,121 @@
+---
+title: Getting Started
+description: Install react-ai-chat and build your first AI-powered chatbot.
+---
+
+---
+
+Get `react-ai-chat` installed and build your first AI-powered chatbot.
+
+This section walks you through the setup from installation to connecting your chatbot UI to a server-side AI route.
+
+## What you'll learn
+
+<Cards>
+  <Card
+    title="Installation"
+    description="Install react-ai-chat and configure the required dependencies."
+    href="/docs/getting-started/installation"
+  />
+  <Card
+    title="Quick Start"
+    description="Build your first working chatbot with a few lines of code."
+    href="/docs/getting-started/quick-start"
+  />
+  <Card
+    title="Chatbot UI"
+    description="Add the ready-made Chatbot component to your application."
+    href="/docs/getting-started/chatbot-ui"
+  />
+  <Card
+    title="API Route"
+    description="Connect your chatbot to a server-side AI model."
+    href="/docs/getting-started/api-route"
+  />
+</Cards>
+
+## How it works
+
+A basic `react-ai-chat` setup has two parts:
+
+```text
+Your application
+       ↓
+   Chatbot UI
+       ↓
+   /api/chat
+       ↓
+ createChatRoute()
+       ↓
+    AI model
+```
+
+The client handles the chatbot interface and sends messages to your API endpoint.
+
+The server route handles the AI model and streams the response back to the chatbot.
+
+## Basic setup
+
+Once the package is installed, the simplest setup looks like this.
+
+### 1. Add the chatbot
+
+```tsx
+"use client";
+
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export default function App() {
+  return <Chatbot />;
+}
+```
+
+By default, the chatbot sends requests to:
+
+```text
+/api/chat
+```
+
+### 2. Create the API route
+
+With Next.js App Router, create:
+
+```text
+app/
+└── api/
+    └── chat/
+        └── route.ts
+```
+
+Then configure the route with your AI model:
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+Your chatbot can now send messages to the server and receive streamed AI responses.
+
+## Next steps
+
+Start with [Installation](/docs/getting-started/installation) if you haven't installed the package yet.
+
+If the package is already installed, continue with [Quick Start](/docs/getting-started/quick-start) to build your first chatbot.
+
+<Cards>
+  <Card
+    title="Installation"
+    description="Set up react-ai-chat in your project."
+    href="/docs/getting-started/installation"
+  />
+  <Card
+    title="Quick Start"
+    description="Build a complete chatbot step by step."
+    href="/docs/getting-started/quick-start"
+  />
+</Cards>

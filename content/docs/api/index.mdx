@@ -1,0 +1,225 @@
+---
+title: API Reference
+description: Explore the components, context, server APIs, providers, errors, and types available in react-ai-chat.
+---
+
+---
+
+Explore the APIs available in `react-ai-chat`.
+
+The API reference covers the ready-made chatbot, provider and context APIs, server-side chat routes, embedding providers, error handling, and TypeScript types.
+
+## Explore the API
+
+<Cards>
+  <Card
+    title="<Chatbot />"
+    description="Configure the ready-made chatbot component."
+    href="/docs/api/chatbot"
+  />
+  <Card
+    title="ChatbotProvider"
+    description="Manage chatbot state and configuration for custom interfaces."
+    href="/docs/api/chatbot-provider"
+  />
+  <Card
+    title="useChatbotContext"
+    description="Access chatbot state and actions from custom UI components."
+    href="/docs/api/use-chatbot-context"
+  />
+  <Card
+    title="createChatRoute"
+    description="Create a server-side streaming chat route with optional RAG."
+    href="/docs/api/create-chat-route"
+  />
+  <Card
+    title="Providers"
+    description="Configure embedding providers for retrieval augmented generation."
+    href="/docs/api/providers"
+  />
+  <Card
+    title="Errors"
+    description="Handle chatbot and provider errors with typed error codes."
+    href="/docs/api/errors"
+  />
+  <Card
+    title="Types"
+    description="Explore the TypeScript types exported by react-ai-chat."
+    href="/docs/api/types"
+  />
+</Cards>
+
+## Client API
+
+The client API provides the components and hooks used to build chatbot interfaces.
+
+### `Chatbot`
+
+Use `Chatbot` when you want the complete ready-made chatbot UI.
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+import "react-ai-chat/style.css";
+
+export default function App() {
+  return <Chatbot />;
+}
+```
+
+See [Chatbot](/docs/api/chatbot) for all available props.
+
+### `ChatbotProvider`
+
+Use `ChatbotProvider` when you want to build your own chatbot interface.
+
+```tsx
+import { ChatbotProvider } from "react-ai-chat";
+
+export function App() {
+  return (
+    <ChatbotProvider>
+      <YourChatbotUI />
+    </ChatbotProvider>
+  );
+}
+```
+
+See [ChatbotProvider](/docs/api/chatbot-provider) for configuration options.
+
+### `useChatbotContext`
+
+Use `useChatbotContext()` inside a `ChatbotProvider` to access chatbot state and actions.
+
+```tsx
+import { useChatbotContext } from "react-ai-chat";
+
+function ChatInput() {
+  const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={input} onChange={(event) => setInput(event.target.value)} />
+
+      <button type="submit" disabled={isLoading}>
+        Send
+      </button>
+    </form>
+  );
+}
+```
+
+See [useChatbotContext](/docs/api/use-chatbot-context) for the complete context API.
+
+## Server API
+
+The server API handles model requests and optional retrieval.
+
+### `createChatRoute`
+
+Use `createChatRoute()` to create the `POST` handler used by your chatbot.
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+The route supports:
+
+- System prompts
+- Message history limits
+- Streaming responses
+- RAG retrieval
+- Embedding providers
+- Error handling
+
+See [createChatRoute](/docs/api/create-chat-route) for the complete API.
+
+## Embedding providers
+
+RAG uses an embedding provider to convert user queries into vectors and search the generated embedding index.
+
+`react-ai-chat` provides helpers for supported providers.
+
+See [Providers](/docs/api/providers) for configuration examples.
+
+## Error handling
+
+Use `ChatbotError` and `ChatbotErrorCode` when you need typed chatbot error handling.
+
+```tsx
+import { ChatbotError } from "react-ai-chat";
+
+function handleError(error: Error) {
+  if (error instanceof ChatbotError) {
+    console.error(error.code);
+    console.error(error.message);
+  }
+}
+```
+
+Available error codes include:
+
+```ts
+type ChatbotErrorCode =
+  | "RATE_LIMIT"
+  | "AUTHENTICATION"
+  | "INVALID_REQUEST"
+  | "PROVIDER"
+  | "UNKNOWN";
+```
+
+See [Errors](/docs/api/errors) for details.
+
+## TypeScript
+
+The package exports types for its public APIs.
+
+For example:
+
+```tsx
+import type { ChatbotErrorCode } from "react-ai-chat";
+```
+
+See [Types](/docs/api/types) for the available exported types.
+
+## Which API should you use?
+
+For a complete chatbot with minimal setup:
+
+```tsx
+import { Chatbot } from "react-ai-chat";
+```
+
+For a fully custom interface:
+
+```tsx
+import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
+```
+
+For the server-side chat endpoint:
+
+```tsx
+import { createChatRoute } from "react-ai-chat/server";
+```
+
+<Cards>
+  <Card
+    title="Getting Started"
+    description="Install react-ai-chat and build your first chatbot."
+    href="/docs/getting-started"
+  />
+  <Card
+    title="Guides"
+    description="Learn how to customize and extend your chatbot."
+    href="/docs/guides"
+  />
+  <Card
+    title="Examples"
+    description="See complete chatbot setups for different applications."
+    href="/docs/examples"
+  />
+</Cards>

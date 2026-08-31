@@ -174,7 +174,7 @@ You can optionally select a fallback model.
 
 Fallback models are filtered to models that support the same embedding dimensions.
 
-If the primary provider hits a rate limit while generating embeddings, the CLI can switch to the fallback provider configuration.
+If the primary provider encounters an error while generating a batch, the CLI can switch to the fallback provider configuration for that batch.
 
 ### 5. Select the documents directory
 
@@ -188,11 +188,43 @@ Choose where the generated embedding index should be saved.
 
 The resulting JSON file contains the indexed chunks and embedding metadata.
 
+## Batched embedding generation
+
+The CLI generates embeddings in batches instead of sending every document chunk as an individual request.
+
+Each embedding provider has a configured maximum batch size. The indexer uses that limit when sending chunks to the provider.
+
+For example, if the provider supports a maximum batch size of `32` and your documents produce `70` chunks:
+
+```text
+70 document chunks
+        ↓
+Batch 1: chunks 1-32
+        ↓
+Batch 2: chunks 33-64
+        ↓
+Batch 3: chunks 65-70
+```
+
+Batches are processed sequentially. This reduces unnecessary API requests and helps reduce rate-limit pressure during large indexing jobs.
+
+### Batch progress
+
+The CLI reports progress while embedding batches:
+
+```text
+Embedding batch 1/3: chunks 1-32/70
+Embedding batch 2/3: chunks 33-64/70
+Embedding batch 3/3: chunks 65-70/70
+```
+
+The number of chunks in each batch depends on the provider's configured maximum batch size.
+
 ## Example workflow
 
 A typical RAG setup looks like:
 
-```text id="z1p8fj"
+```text
 Your Markdown / MDX files
           ↓
 npx react-ai-chat embed
@@ -205,6 +237,10 @@ Embedding dimensions
           ↓
 Optional fallback model
           ↓
+Split into batches
+          ↓
+Generate embeddings
+          ↓
 Embedding index
           ↓
 Your server
@@ -214,9 +250,18 @@ RAG retrieval
 
 ## Embedding progress
 
-During generation, the CLI reports embedding progress and the model currently being used.
+During generation, the CLI reports the progress of each embedding batch and the model currently being used.
 
-If the primary model reaches its rate limit and a fallback model was configured, generation continues using the fallback.
+For example:
+
+```text
+Embedding batch 1/4: chunks 1-32/100
+Embedding batch 2/4: chunks 33-64/100
+Embedding batch 3/4: chunks 65-96/100
+Embedding batch 4/4: chunks 97-100/100
+```
+
+If a batch fails and a fallback model was configured, the CLI can continue processing that batch with the fallback provider configuration.
 
 The generated index records embedding metadata so retrieval can validate that the configured provider and model are compatible.
 
@@ -228,7 +273,7 @@ Set the appropriate environment variable before running the command.
 
 For example:
 
-```text id="m7zq4b"
+```text
 GEMINI_API_KEY=your_api_key_here
 ```
 
@@ -254,7 +299,7 @@ Embedding vectors have a fixed number of dimensions.
 
 For example, an index generated with:
 
-```text id="q2y5rk"
+```text
 Model: your-model
 Dimensions: 768
 ```
@@ -269,11 +314,12 @@ The CLI only creates the index.
 
 Your server route uses that index during chat requests:
 
-```text id="p6h2rw"
+```text
 CLI
  │
  ├── Read documents
  ├── Split into chunks
+ ├── Create embedding batches
  ├── Generate embeddings
  └── Save index
           │
@@ -312,9 +358,11 @@ Regenerate the index when changing your embedding configuration.
 
 ### Rate limit
 
-Configure a fallback model that supports the same dimensions as the primary model.
+Embedding requests are processed in batches to reduce unnecessary API requests and rate-limit pressure.
 
-The fallback is used when the primary embedding generation hits a rate limit.
+If a batch fails and a fallback model was configured, the CLI can use the fallback provider configuration to continue processing that batch.
+
+Make sure the fallback model supports the same embedding dimensions as the primary model.
 
 ## Next steps
 

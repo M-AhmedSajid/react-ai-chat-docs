@@ -11,7 +11,7 @@ description: Configure embedding providers for react-ai-chat RAG.
 
 The server package exports:
 
-```tsx id="p7m3vx"
+```tsx
 import {
   googleEmbedding,
   openAIEmbedding,
@@ -28,13 +28,13 @@ The provider you use to query the index must be compatible with the embedding co
 
 Install the Google GenAI SDK:
 
-```bash id="x5q8kc"
+```bash
 npm install @google/genai
 ```
 
 Create a Google client:
 
-```tsx id="r2n6wp"
+```tsx
 import { GoogleGenAI } from "@google/genai";
 import { googleEmbedding } from "react-ai-chat/server";
 
@@ -49,23 +49,29 @@ const provider = googleEmbedding(client, {
 
 When using a generated embedding index, use the model stored in the index:
 
-```tsx id="k8v3mz"
+```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
 });
 ```
 
+### Batch size
+
+The default `maxBatchSize` is `250`.
+
+The RAG indexer uses this value to determine how many chunks can be sent in a single embedding request.
+
 ## OpenAI
 
 Install the OpenAI SDK:
 
-```bash id="q4m7xs"
+```bash
 npm install openai
 ```
 
 Create an OpenAI client:
 
-```tsx id="n6c2vp"
+```tsx
 import OpenAI from "openai";
 import { openAIEmbedding } from "react-ai-chat/server";
 
@@ -80,23 +86,29 @@ const provider = openAIEmbedding(client, {
 
 Use the model recorded in your generated index when configuring RAG:
 
-```tsx id="j9r5wd"
+```tsx
 const provider = openAIEmbedding(client, {
   model: embeddings.model,
 });
 ```
 
+### Batch size
+
+The default `maxBatchSize` is `2,048`.
+
+The RAG indexer uses this value to determine how many chunks can be sent in a single embedding request.
+
 ## Voyage AI
 
 Install the Voyage AI SDK:
 
-```bash id="t3x7qn"
+```bash
 npm install voyageai
 ```
 
 Create the client and embedding provider:
 
-```tsx id="v8k2mf"
+```tsx
 import VoyageAI from "voyageai";
 import { voyageEmbedding } from "react-ai-chat/server";
 
@@ -111,23 +123,29 @@ const provider = voyageEmbedding(client, {
 
 For an existing generated index:
 
-```tsx id="c6p4zr"
+```tsx
 const provider = voyageEmbedding(client, {
   model: embeddings.model,
 });
 ```
 
+### Batch size
+
+The default `maxBatchSize` is `1,000`.
+
+The RAG indexer uses this value to determine how many chunks can be sent in a single embedding request.
+
 ## Cohere
 
 Install the Cohere SDK:
 
-```bash id="m5v9xs"
+```bash
 npm install cohere-ai
 ```
 
 Create the client:
 
-```tsx id="w2q7kc"
+```tsx
 import { CohereClientV2 } from "cohere-ai";
 import { cohereEmbedding } from "react-ai-chat/server";
 
@@ -142,11 +160,17 @@ const provider = cohereEmbedding(client, {
 
 For an existing generated index:
 
-```tsx id="h4n8vp"
+```tsx
 const provider = cohereEmbedding(client, {
   model: embeddings.model,
 });
 ```
+
+### Batch size
+
+The default `maxBatchSize` is `96`.
+
+The RAG indexer uses this value to determine how many chunks can be sent in a single embedding request.
 
 ## Jina AI
 
@@ -154,7 +178,7 @@ Jina uses its own API client helper.
 
 Create the client with `createJinaClient`:
 
-```tsx id="s7m3qx"
+```tsx
 import { createJinaClient, jinaEmbedding } from "react-ai-chat/server";
 
 const client = createJinaClient({
@@ -168,23 +192,29 @@ const provider = jinaEmbedding(client, {
 
 For an existing index:
 
-```tsx id="e9r4kw"
+```tsx
 const provider = jinaEmbedding(client, {
   model: embeddings.model,
 });
 ```
 
+### Batch size
+
+The default `maxBatchSize` is `2,048`.
+
+The RAG indexer uses this value to determine how many chunks can be sent in a single embedding request.
+
 ## Hugging Face
 
 Install the Hugging Face inference SDK:
 
-```bash id="y6p2nc"
+```bash
 npm install @huggingface/inference
 ```
 
 Create the client:
 
-```tsx id="f8q5vr"
+```tsx
 import { HfInference } from "@huggingface/inference";
 import { huggingFaceEmbedding } from "react-ai-chat/server";
 
@@ -197,11 +227,57 @@ const provider = huggingFaceEmbedding(client, {
 
 For an existing generated index:
 
-```tsx id="z3m7kx"
+```tsx
 const provider = huggingFaceEmbedding(client, {
   model: embeddings.model,
 });
 ```
+
+### Batch size
+
+The default `maxBatchSize` is `32`.
+
+The RAG indexer uses this value to determine how many chunks can be sent in a single embedding request.
+
+## Batch embedding
+
+All supported embedding providers expose a maximum batch size used during RAG index generation.
+
+Instead of sending every document chunk as an individual request, the indexer groups chunks into batches.
+
+For example:
+
+```text
+70 document chunks
+        ↓
+Provider maxBatchSize: 32
+        ↓
+Batch 1: 32 chunks
+Batch 2: 32 chunks
+Batch 3: 6 chunks
+```
+
+The batches are processed sequentially.
+
+This reduces the number of API requests and helps reduce rate-limit pressure during large indexing jobs.
+
+## `embedMany()`
+
+Embedding providers support batched embedding through `embedMany()`.
+
+The indexer uses this operation when generating embeddings for multiple document chunks.
+
+Conceptually:
+
+```tsx
+const embeddings = await provider.embedMany(chunks);
+```
+
+The provider handles the request according to its API requirements.
+
+The indexer then stores the resulting vectors alongside their document chunks.
+
+Batch processing is performed sequentially so the indexer can control request volume and handle provider errors at the batch level.
 
 ## Provider and index compatibility
 
@@ -209,13 +285,13 @@ An embedding index is tied to the embedding model that generated its vectors.
 
 For example, if your index was generated with:
 
-```text id="q8v4ms"
+```text
 google / gemini-embedding-001
 ```
 
 your RAG route should use the same embedding configuration:
 
-```tsx id="n5x2kp"
+```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
 });
@@ -225,7 +301,7 @@ Changing the model can produce vectors with different dimensions or a different 
 
 If you change the embedding provider or model, regenerate the index.
 
-```bash id="u7c9rf"
+```bash
 npx react-ai-chat embed
 ```
 
@@ -235,7 +311,7 @@ Keep provider API keys on the server.
 
 For example:
 
-```text id="b4m8qs"
+```text
 GOOGLE_GENERATIVE_AI_API_KEY=...
 OPENAI_API_KEY=...
 VOYAGE_API_KEY=...
@@ -250,7 +326,7 @@ Do not expose these values in client-side code.
 
 Once your provider is configured, pass it to the `rag` option:
 
-```tsx id="r6k3wp"
+```tsx
 import { google } from "@ai-sdk/google";
 import { GoogleGenAI } from "@google/genai";
 import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
@@ -284,13 +360,29 @@ These can use different model providers.
 
 The embedding CLI supports a fallback model when generating an index.
 
-If the primary embedding model reaches its rate limit during indexing, the CLI can switch to the configured fallback model.
+Embedding requests are processed in batches. If the primary provider encounters an error while processing a batch, the configured fallback provider can be used for that batch.
+
+The fallback configuration must be compatible with the selected embedding dimensions.
+
+For example:
+
+```text
+Primary provider
+      ↓
+Embedding batch
+      ↓
+Provider error
+      ↓
+Fallback provider
+      ↓
+Continue indexing
+```
 
 The generated index records the embedding configuration used during generation.
 
 If embeddings were generated using a fallback model, configure your retrieval provider with the model recorded in the generated index:
 
-```tsx id="k7w2mc"
+```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
 });

@@ -1,37 +1,54 @@
 ---
 title: Introduction
-description: Build AI chat experiences in React with a customizable UI and optional RAG support.
+description: Add a customizable AI chatbot to your React app with streaming responses, server-side model integration, and optional RAG.
 ---
 
-# Introduction
+---
 
-`react-ai-chat` is a lightweight React toolkit for adding an AI chatbot to your application.
+## What is `react-ai-chat`?
 
-It provides the chatbot UI and chat state while letting you control the backend, AI model, and data your chatbot uses. You can start with a simple AI chat and add RAG when your application needs responses grounded in your own content.
+`react-ai-chat` is a customizable AI chatbot toolkit for React.
 
-## How it works
+It gives you a ready-made `Chatbot` component, server-side helpers, a CLI for generating editable chatbot UI, and optional RAG support for connecting your chatbot to your own content.
 
-A typical setup has three parts:
+You can start with the ready-made UI and customize it through props. When you need deeper control, generate the chatbot components directly into your project and edit the source yourself.
 
-```text
-Your React App
-      │
-      v
-react-ai-chat
-Chatbot UI + Chat State
-      │
-      v
-Your API Route
-      │
-      v
-AI SDK + AI Model
+## Why `react-ai-chat`?
+
+Building an AI chatbot usually means putting together the chat interface, streaming state, API route, model integration, and retrieval system yourself.
+
+`react-ai-chat` gives you those building blocks while keeping the implementation in your application.
+
+### Ready-made UI
+
+Add the `Chatbot` component and get a complete chat interface with streaming responses, starter prompts, themes, icons, positioning, and customizable text.
+
+### Your own UI
+
+Generate the chatbot components with the CLI:
+
+```bash
+npx react-ai-chat init
 ```
 
-The `Chatbot` component handles the client-side experience. Your API route receives the conversation and streams the model response back to the client.
+The generated components become part of your project, so you can change the markup, styling, message rendering, input behavior, and interaction patterns.
 
-On the server, `react-ai-chat` provides `createChatRoute()` to help create the chat endpoint. You provide the AI SDK-compatible model that generates the response.
+### Server-side model integration
 
-When you need your chatbot to answer questions using your own documentation or other content, you can add RAG:
+Create your chat endpoint with `createChatRoute()` and connect it to an AI SDK-compatible model.
+
+```tsx
+import { google } from "@ai-sdk/google";
+import { createChatRoute } from "react-ai-chat/server";
+
+export const POST = createChatRoute({
+  model: google("gemini-3.5-flash"),
+});
+```
+
+### Optional RAG
+
+Connect your chatbot to your own documents when you need answers grounded in application-specific content.
 
 ```text
 Your Documents
@@ -47,66 +64,127 @@ Relevant Context
       │
       v
 AI Model
+      │
+      v
+Streaming Response
 ```
 
-RAG is optional. A basic chatbot does not require an embedding index or document retrieval.
+RAG is optional. A basic chatbot only needs the chatbot UI, your API route, and an AI SDK-compatible model.
+
+## How it works
+
+A typical chatbot setup looks like this:
+
+```text
+Your React App
+      │
+      v
+react-ai-chat
+Chatbot UI + Chat State
+      │
+      v
+Your API Route
+      │
+      v
+AI SDK + AI Model
+```
+
+The `Chatbot` component handles the client-side chat experience.
+
+Your API route handles the server-side request and connects the conversation to your chosen AI model.
+
+`createChatRoute()` provides the server-side route helper, while the AI SDK provider supplies the model.
+
+This separation lets you control your backend and model configuration without having to build the chatbot interface from scratch.
 
 ## What you get
 
-### Chatbot UI
-
-A ready-to-use chatbot interface with customizable components, themes, starter prompts, icons, positioning, and styling.
-
-### Server route
-
-A `createChatRoute()` helper for creating the backend endpoint that connects your chatbot to an AI SDK-compatible model.
-
-### RAG
-
-Optional document retrieval for building chatbots that can answer questions using your own content.
-
-### Embedding providers
-
-Built-in support for multiple embedding providers so you can choose the provider that fits your application.
-
-### CLI
-
-A CLI for loading documents, chunking their content, generating embeddings, and creating the local embedding index used by RAG.
+| Feature                 | What it provides                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------- |
+| **Chatbot UI**          | Ready-made chat interface with themes, prompts, icons, positioning, and customizable text |
+| **Chat state**          | Client-side chat behavior for streaming conversations                                     |
+| **Server route**        | `createChatRoute()` for connecting your API route to an AI SDK model                      |
+| **Generated UI**        | CLI-generated chatbot components that you can edit inside your project                    |
+| **RAG**                 | Document retrieval for responses grounded in your own content                             |
+| **Embedding providers** | Support for multiple embedding providers                                                  |
+| **CLI**                 | Commands for generating chatbot UI and building embedding indexes                         |
+| **TypeScript**          | Types for chatbot configuration, themes, RAG indexes, providers, and errors               |
 
 ## Prerequisites
 
-You should already be comfortable with:
+You should be comfortable with:
 
-* **React and TypeScript:** Hooks, component props, and basic TypeScript types.
-* **API routes:** How frontend components communicate with backend endpoints such as `/api/chat`.
-* **AI SDK and models:** How to configure your chosen AI provider and create an AI SDK-compatible model.
+- **React:** Components, props, hooks, and basic application structure.
+- **TypeScript:** Basic types and TypeScript configuration.
+- **API routes:** How your frontend communicates with a backend endpoint such as `/api/chat`.
+- **AI SDK providers:** How to configure your chosen model provider.
 
-`react-ai-chat` handles the chatbot UI and chat state. You provide the AI model and application-specific backend configuration.
+You will also need API credentials for the AI provider you choose.
+
+For server-side integrations, keep provider API keys in environment variables.
 
 ## Tested frameworks
 
-The package has been tested with:
+`react-ai-chat` has been tested with:
 
-* Next.js
-* Vite
-* React Router
+- Next.js
+- Vite
+- React Router
 
-The package is designed around React APIs rather than Next.js-specific client components, so it can be used in React-based applications that can provide the required backend endpoint.
+The chatbot UI is built around React APIs rather than framework-specific client components.
 
-The tested integrations are the configurations verified by the project. Other React frameworks may work, but their compatibility has not been specifically tested.
+Your application needs a way to provide the server-side chat endpoint used by the chatbot.
+
+Other React frameworks may work, but they have not been specifically tested by this project.
+
+## Choose your path
+
+There are two ways to start with `react-ai-chat`.
+
+### Ready-made chatbot
+
+Use the `Chatbot` component when you want a complete interface that you can configure through props.
+
+**Best for:** getting an AI chatbot running quickly.
+
+<Card href="/docs/getting-started" title="Get started">
+  Install the package and create your first chatbot.
+</Card>
+
+### Generated chatbot
+
+Use the CLI when you want the chatbot UI source inside your own application.
+
+**Best for:** products that need deeper control over the interface.
+
+<Card href="/docs/guides/generated-chatbot" title="Generate your chatbot">
+  Generate editable chatbot components directly into your project.
+</Card>
 
 ## Where to go next
+
 <Cards>
   <Card href="/docs/getting-started" title="Get Started">
-    Install the package and create your first chatbot.
+    Install react-ai-chat and create your first working chatbot.
   </Card>
-  <Card href="/docs/getting-started/chatbot-ui" title="Chatbot UI">
-    Learn how the client component works.
-  </Card>
-  <Card href="/docs/getting-started/api-route" title="Get Started">
-    Connect the chatbot to your AI model.
-  </Card>
-  <Card href="/docs/guides/rag" title="Get Started">
-    Add document retrieval and use your own content as context.
+
+<Card href="/docs/getting-started/chatbot-ui" title="Chatbot UI">
+  Learn how to configure the ready-made Chatbot component.
+</Card>
+
+<Card href="/docs/getting-started/api-route" title="API Route">
+  Connect your chatbot to an AI SDK-compatible model.
+</Card>
+
+<Card href="/docs/guides/generated-chatbot" title="Generated Chatbot">
+  Generate editable chatbot components and take control of the UI.
+</Card>
+
+<Card href="/docs/guides/rag" title="RAG">
+  Connect your chatbot to your own documents and retrieve relevant context.
+</Card>
+
+  <Card href="/docs/api" title="API Reference">
+    Explore the package APIs, providers, types, and configuration options.
   </Card>
 </Cards>

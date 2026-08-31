@@ -1,25 +1,54 @@
 ---
 title: Quick Start
-description: Build your first AI chatbot with react-ai-chat.
+description: Build your first working AI chatbot with react-ai-chat in a few minutes.
 ---
 
 ---
 
-# Quick Start
+Build your first working AI chatbot with `react-ai-chat`.
 
-Build a working AI chatbot with `react-ai-chat` in a few steps.
+This guide uses the ready-made `<Chatbot />` component. You will install the package, create a server-side chat route, connect an AI model, and render the chatbot in your React application.
 
-This guide uses the ready-made `<Chatbot />` component. If you want the chatbot UI source inside your project, see [Generated Chatbot](/docs/guides/generated-chatbot).
+If you want the chatbot UI source inside your project, see [Generated Chatbot](/docs/guides/generated-chatbot).
 
 ## 1. Install the dependencies
 
 Install `react-ai-chat` and the AI SDK provider for the model you want to use.
 
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}> <Tab value="npm">
+
 ```bash
 npm install react-ai-chat @ai-sdk/google
 ```
 
-`ai` is already included as a dependency of `react-ai-chat`, so you do not need to install it separately.
+  </Tab>
+
+  <Tab value="pnpm">
+
+```bash
+pnpm add react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+
+  <Tab value="yarn">
+
+```bash
+yarn add react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+
+  <Tab value="bun">
+
+```bash
+bun add react-ai-chat @ai-sdk/google
+```
+
+  </Tab>
+</Tabs>
+
+`react-ai-chat` includes the `ai` package, so you do not need to install it separately.
 
 ## 2. Add your API key
 
@@ -31,11 +60,11 @@ GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
 
 Keep your API key on the server. Do not expose it through client-side environment variables.
 
-## 3. Create the API route
+## 3. Create the chat API route
 
 Create a route for your chatbot.
 
-For a Next.js App Router application, create:
+For a Next.js App Router application:
 
 ```text
 app/
@@ -55,9 +84,11 @@ export const POST = createChatRoute({
 });
 ```
 
-`createChatRoute()` handles the incoming messages and streams the model response back to the chatbot.
+`createChatRoute()` handles incoming chat messages and streams the model response back to the chatbot.
 
-Your route can use any AI SDK-compatible language model.
+Your route can use an AI SDK-compatible language model.
+
+For more server configuration options, see [API Route](/docs/getting-started/api-route).
 
 ## 4. Add the chatbot
 
@@ -72,19 +103,15 @@ export default function Page() {
 }
 ```
 
-The chatbot sends requests to:
+The chatbot uses `/api/chat` as its default API endpoint.
 
-```text
-/api/chat
-```
+That matches the route created in the previous step.
 
-which matches the route created in the previous step.
+At this point, start your development server and open your application. You should see the chatbot and be able to send a message.
 
-## 5. Configure the chatbot
+## 5. Customize the chatbot
 
-You can customize the chatbot directly through its props.
-
-For example:
+You can configure the ready-made chatbot through its props.
 
 ```tsx
 <Chatbot
@@ -96,9 +123,18 @@ For example:
 />
 ```
 
-You can also configure starter prompts, icons, theme mode, custom classes, theme tokens, and error handling.
+You can also configure:
 
-See [Chatbot UI](/docs/getting-started/chatbot-ui) for the complete list of options.
+- Starter prompts
+- Theme mode
+- Theme tokens
+- Icons
+- Custom CSS classes
+- API endpoints
+- Error handling
+- Chatbot text
+
+See [Chatbot UI](/docs/getting-started/chatbot-ui) for the complete configuration reference.
 
 ## How it works
 
@@ -120,33 +156,37 @@ Streaming response
 <Chatbot />
 ```
 
-The browser only communicates with your API route. Your model provider credentials stay on the server.
+The browser communicates with your API route. Your model provider credentials stay on the server.
 
-## Add your own knowledge
+## Add your own knowledge with RAG
 
-The basic chatbot can answer using the model's existing knowledge.
+A basic chatbot uses the model's existing knowledge.
 
-To make it answer questions from your own documentation, files, or other content, add RAG.
+You can add RAG when you want the chatbot to retrieve information from your own documents, files, or other content.
 
-The CLI can create an embedding index from your documents:
+Generate an embedding index with:
 
 ```bash
-npx react-ai-chat
+npx react-ai-chat embed
 ```
 
-The CLI lets you choose the embedding provider, model, dimensions, fallback model, source documents, and output path interactively.
+The CLI can configure the embedding provider, model, dimensions, fallback model, source documents, and output path.
+
+Then connect the generated index to `createChatRoute()`.
 
 See [RAG](/docs/guides/rag) for the complete setup.
 
 ## Generate an editable chatbot
 
-If you want full control over the chatbot UI, generate the components into your project:
+The ready-made `<Chatbot />` component is the fastest way to get started.
+
+When you need deeper control over the UI, generate the chatbot components directly into your project:
 
 ```bash
 npx react-ai-chat init
 ```
 
-This creates editable React components and CSS.
+This creates editable React components and CSS:
 
 ```text
 chatbot/
@@ -159,6 +199,8 @@ chatbot/
 
 The generated components use `ChatbotProvider` and `useChatbotContext` from `react-ai-chat`.
 
+You can then change the structure, styling, message rendering, input behavior, and interaction patterns.
+
 See [Generated Chatbot](/docs/guides/generated-chatbot) to learn how it works.
 
 ## What's next?
@@ -166,17 +208,22 @@ See [Generated Chatbot](/docs/guides/generated-chatbot) to learn how it works.
 <Cards>
   <Card
     title="Chatbot UI"
-    description="Configure the ready-made chatbot and customize its appearance."
+    description="Configure the ready-made chatbot and customize its appearance and behavior."
     href="/docs/getting-started/chatbot-ui"
   />
   <Card
+    title="API Route"
+    description="Configure your server-side chat route and model integration."
+    href="/docs/getting-started/api-route"
+  />
+  <Card
     title="Generated Chatbot"
-    description="Generate editable chatbot components in your project."
+    description="Generate editable chatbot components directly into your project."
     href="/docs/guides/generated-chatbot"
   />
   <Card
     title="RAG"
-    description="Give your chatbot access to your own documents."
+    description="Connect your chatbot to your own documents and retrieve relevant context."
     href="/docs/guides/rag"
   />
 </Cards>

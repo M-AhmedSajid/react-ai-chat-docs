@@ -3,7 +3,9 @@ title: Portfolio
 description: Add an AI assistant to your personal portfolio so visitors can ask questions about your work, skills, projects, and experience.
 ---
 
-# Portfolio
+---
+
+## Overview
 
 A portfolio chatbot can help visitors explore your work without searching through every section of your website.
 
@@ -106,43 +108,69 @@ The more useful information you provide in these documents, the more useful the 
 <Step>
 ## 2. Generate the embedding index
 
-Use the CLI to process your portfolio content.
-
-For example:
+Run the embedding command:
 
 ```bash
-npx react-ai-chat --google ./content ./chatbot/embeddings.json
+npx react-ai-chat embed
 ```
 
-You can replace Google with another supported embedding provider:
+The CLI guides you through the embedding setup:
 
-```bash
-npx react-ai-chat --openai ./content ./chatbot/embeddings.json
+1. Select an embedding provider.
+2. Select the primary embedding model.
+3. Select the embedding dimensions.
+4. Optionally select a fallback model.
+5. Select the directory containing your portfolio content.
+6. Select the output path for the embedding index.
+
+The current indexing pipeline processes Markdown and MDX files.
+
+For example, your project can contain:
+
+```text
+chatbot/
+└── embeddings.json
 ```
 
-This creates an embedding index that the server can search when a visitor asks a question.
+The generated index contains the document chunks, embeddings, and embedding configuration used during generation.
+
+See [CLI](/docs/guides/cli) for the complete setup.
 
 </Step>
 
 <Step>
 ## 3. Configure the embedding provider
 
-Create the embedding provider on the server.
+The server needs an embedding provider compatible with the model used to generate the index.
 
-For Google:
+For Google, install the Google GenAI SDK:
+
+```bash
+npm install @google/genai
+```
+
+Then create the client and embedding provider:
 
 ```tsx
 import { GoogleGenAI } from "@google/genai";
 import { googleEmbedding } from "react-ai-chat/server";
 
+import embeddings from "@/chatbot/embeddings.json";
+
 const client = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const embeddingProvider = googleEmbedding(client);
+const embeddingProvider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 ```
 
+Using `embeddings.model` keeps the retrieval provider aligned with the model that generated the index.
+
 Keep the API key on the server.
+
+See [Embedding Providers](/docs/api/providers) for other supported providers.
 
 </Step>
 
@@ -169,13 +197,15 @@ import { createChatRoute, googleEmbedding } from "react-ai-chat/server";
 
 import embeddings from "@/chatbot/embeddings.json";
 
-const model = google("gemini-2.5-flash");
+const model = google("gemini-3.5-flash");
 
 const client = new GoogleGenAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
-const embeddingProvider = googleEmbedding(client);
+const embeddingProvider = googleEmbedding(client, {
+  model: embeddings.model,
+});
 
 export const POST = createChatRoute({
   model,
@@ -331,7 +361,7 @@ The embedding index is generated from your source content.
 When you update your portfolio information, regenerate the index:
 
 ```bash
-npx react-ai-chat --google ./content ./chatbot/embeddings.json
+npx react-ai-chat embed
 ```
 
 For a deployed portfolio, you can include this step in your deployment process.

@@ -5,11 +5,13 @@ description: Generate an editable chatbot UI and customize it directly in your p
 
 ---
 
-# Generated Chatbot
+## Introduction
 
-The CLI can generate the chatbot UI directly into your project.
+The `react-ai-chat` CLI can generate the chatbot UI directly inside your project.
 
-This is useful when you want control over the component structure, markup, and CSS instead of configuring the ready-made `<Chatbot />` component through props.
+This gives you access to the React components and CSS, so you can change the structure, message rendering, interactions, and styling directly.
+
+Use the [ready-made Chatbot](/docs/getting-started/chatbot-ui) when you only need configuration through props.
 
 ## Generate the chatbot
 
@@ -19,13 +21,13 @@ Run:
 npx react-ai-chat init
 ```
 
-By default, the CLI generates TypeScript React components inside:
+By default, the CLI generates TypeScript React components in:
 
 ```text
 ./chatbot
 ```
 
-You can change the output directory with `--path`:
+You can choose a different output directory with `--path`:
 
 ```bash
 npx react-ai-chat init --path ./components/chatbot
@@ -37,11 +39,17 @@ For JavaScript projects, use `--jsx`:
 npx react-ai-chat init --jsx
 ```
 
-See [CLI](/docs/guides/cli) for all available options.
+Run the following to see all available options:
+
+```bash
+npx react-ai-chat init --help
+```
+
+See [CLI](/docs/guides/cli) for the complete command reference.
 
 ## Generated files
 
-The default TypeScript generation produces:
+A default TypeScript generation produces:
 
 ```text
 chatbot/
@@ -52,13 +60,13 @@ chatbot/
 └── chatbot.css
 ```
 
-Each file has a specific responsibility.
+Each file handles a different part of the chatbot.
 
 ### `chatbot.tsx`
 
-This is the main component.
+This is the main chatbot component.
 
-It creates the `ChatbotProvider` and renders the chatbot UI.
+It creates the `ChatbotProvider` and combines the generated UI components.
 
 ```tsx
 import { ChatbotProvider } from "react-ai-chat";
@@ -68,96 +76,147 @@ import { ChatbotInput } from "./chatbot-input";
 import "./chatbot.css";
 ```
 
-The generated component exposes a small set of configuration props:
+The generated component supports configuration for the API endpoint, position, initial state, and theme mode.
 
 ```tsx
 interface ChatbotProps {
-  apiEndpoint?: string;
+  title?: string;
+  subtitle?: string;
+  triggerText?: string;
+  triggerIcon?: ReactNode;
+  sendIcon?: ReactNode;
+  closeIcon?: ReactNode;
   position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  starterPrompts?: string[];
+  emptyStateText?: string;
+  placeholder?: string;
+  starterPromptsLabel?: string;
+  apiEndpoint?: string;
   initialOpen?: boolean;
   themeMode?: "auto" | "light" | "dark";
+  classNames?: {
+    wrapper?: string;
+    trigger?: string;
+    window?: string;
+    header?: string;
+  };
+  theme?: ChatbotTheme;
+  onError?: (error: Error) => void;
 }
 ```
 
-The generated component defaults to:
+The defaults are:
 
-```text
-apiEndpoint: /api/chat
-position: bottom-right
-initialOpen: false
-themeMode: auto
-```
+| Option        | Default        |
+| ------------- | -------------- |
+| `apiEndpoint` | `/api/chat`    |
+| `position`    | `bottom-right` |
+| `initialOpen` | `false`        |
+| `themeMode`   | `auto`         |
+
+### Component props
+
+The generated `<Chatbot />` supports the same configuration props as the ready-made component.
+
+You can customize:
+
+- `title` and `subtitle`
+- `triggerText`
+- `triggerIcon`, `sendIcon`, and `closeIcon`
+- `position`
+- `starterPrompts`
+- `emptyStateText`
+- `placeholder`
+- `starterPromptsLabel`
+- `apiEndpoint`
+- `initialOpen`
+- `themeMode`
+- `classNames`
+- `theme`
+- `onError`
+
+For detailed examples and the complete prop behavior, see [Chatbot UI](/docs/getting-started/chatbot-ui) and [Chatbot API](/docs/api/chatbot).
 
 ### `chatbot-header.tsx`
 
 Contains the chatbot header.
 
-The generated header includes:
+The generated header renders the configured title and subtitle and includes the close button.
 
-- Assistant title
-- Subtitle
-- Close button
+You can customize the header through the component props:
 
-The close button uses `useChatbotContext()` to control the chatbot state.
+````tsx
+<Chatbot
+  title="Support Assistant"
+  subtitle="We're here to help"
+  closeIcon={<CloseIcon />}
+/>
+
+It uses `useChatbotContext()` to access the chatbot state.
+
+You can replace the header markup with your own design.
 
 ### `chatbot-messages.tsx`
 
-Renders the conversation.
+Renders the conversation and handles the empty state.
 
-It uses `useChatbotContext()` to access:
-
-- `messages`
-- `isLoading`
-- `handleSubmit`
-
-Assistant text is rendered with `react-markdown`.
-
-The generated component also includes starter prompts:
+It uses `useChatbotContext()` to access values such as:
 
 ```tsx
-const starterPrompts = [
-  "What is the main tech stack?",
-  "Tell me about key projects.",
-  "How can I get started?",
-];
-```
+const { messages, isLoading, handleSubmit } = useChatbotContext();
+````
 
-You can replace these prompts with questions relevant to your application.
+Assistant messages are rendered with `react-markdown`.
+
+The generated UI can include starter prompts for the empty conversation state.
+
+You can customize the prompts through the `starterPrompts` prop:
+
+````tsx
+<Chatbot
+  starterPrompts={[
+    "What can you help me with?",
+    "How does this work?",
+    "Tell me about this project",
+  ]}
+/>
+
+You can also customize the empty-state text and starter prompt label:
+
+```tsx
+<Chatbot
+  emptyStateText="How can I help you?"
+  starterPromptsLabel="Try asking"
+  starterPrompts={[
+    "What can you help me with?",
+    "Tell me about this project",
+  ]}
+/>
+```
 
 ### `chatbot-input.tsx`
 
 Contains the message input and send button.
 
-It uses:
+It uses the chatbot context to read and update the input:
 
 ```tsx
 const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
-```
+````
 
-The generated input disables submission while a response is loading or when the input is empty.
+The generated input prevents submission while a response is loading or when the input is empty.
 
 ### `chatbot.css`
 
 Contains the styles for the generated chatbot.
 
-The stylesheet includes:
+The stylesheet covers the chatbot window, trigger, header, messages, starter prompts, input, loading state, theme tokens, positioning, and responsive behavior.
 
-- Chat window
-- Trigger button
-- Header
-- Message bubbles
-- Starter prompts
-- Input
-- Loading indicator
-- Light and dark theme tokens
-- Position utilities
-- Responsive sizing
+You own the generated stylesheet inside your project, so you can modify it directly.
 
-You own this stylesheet after generation, so you can modify it freely.
+## Add the generated chatbot
 
-## Using the generated chatbot
-
-Import your generated component from your project:
+Import the generated component into your application:
 
 ```tsx
 import { Chatbot } from "./chatbot/chatbot";
@@ -167,17 +226,21 @@ export default function Page() {
 }
 ```
 
-The generated component uses `/api/chat` by default.
+The generated chatbot uses `/api/chat` by default.
 
-If your API route uses another path:
+If your server route uses another endpoint:
 
 ```tsx
 <Chatbot apiEndpoint="/api/assistant" />
 ```
 
+Make sure the client endpoint matches your server route.
+
+See [API Route](/docs/getting-started/api-route) for server-side setup.
+
 ## Position
 
-The generated component supports four positions:
+The generated chatbot supports four positions:
 
 ```tsx
 <Chatbot position="bottom-right" />
@@ -195,9 +258,11 @@ The generated component supports four positions:
 <Chatbot position="top-left" />
 ```
 
+The default position is `bottom-right`.
+
 ## Theme mode
 
-The generated component supports:
+Set `themeMode` to control the generated chatbot's color mode:
 
 ```tsx
 <Chatbot themeMode="auto" />
@@ -211,15 +276,15 @@ The generated component supports:
 <Chatbot themeMode="dark" />
 ```
 
-`auto` allows the generated CSS to follow the system color preference.
+With `auto`, the generated stylesheet follows the user's system color preference.
 
-You can also modify the CSS variables directly in `chatbot.css`.
+You can also make more detailed visual changes by editing the CSS variables in `chatbot.css`.
 
-## Using the context
+## Use the chatbot context
 
 The generated components use `ChatbotProvider` and `useChatbotContext`.
 
-You can access the chat state inside your own components:
+You can use the context in your own components to build custom chatbot UI while keeping the package's chat state and request handling.
 
 ```tsx
 import { useChatbotContext } from "react-ai-chat";
@@ -244,29 +309,17 @@ function CustomComponent() {
 }
 ```
 
-This allows you to build your own UI while keeping the package's chat state and request handling.
+See [useChatbotContext](/docs/api/use-chatbot-context) for the complete context API.
 
-See [useChatbotContext](/docs/api/use-chatbot-context) for the available context values.
+## Customize the generated UI
 
-## Customizing the generated UI
+The generated files are regular React components and CSS.
 
-The generated files are regular React components.
+You can change the parts that matter to your application.
 
-You can change:
+### Change starter prompts
 
-- Header content
-- Starter prompts
-- Empty state
-- Message rendering
-- Markdown rendering
-- Input behavior
-- Loading UI
-- Icons
-- CSS
-- Layout
-- Responsive behavior
-
-For example, replace the generated starter prompts:
+Replace the generated prompts:
 
 ```tsx
 const starterPrompts = [
@@ -276,7 +329,9 @@ const starterPrompts = [
 ];
 ```
 
-You can also replace the generated header:
+### Change the header
+
+Replace the generated header markup with your own:
 
 ```tsx
 <header className="chatbot-header">
@@ -287,59 +342,63 @@ You can also replace the generated header:
 </header>
 ```
 
+### Change message rendering
+
+You can modify how user and assistant messages are displayed inside `chatbot-messages.tsx`.
+
+This is useful for adding avatars, timestamps, custom Markdown styling, citations, or other application-specific UI.
+
+### Change the input
+
+Modify `chatbot-input.tsx` when you need custom input behavior, controls, attachments, or additional actions.
+
+### Change the styling
+
+Edit `chatbot.css` when you need changes to colors, spacing, sizing, borders, animations, responsive behavior, or layout.
+
 ## Regenerating the chatbot
 
-The generated files are application source code.
+The generated files become part of your application source code.
 
-If you run the CLI with `--force`, existing generated files can be overwritten:
+Running the CLI with `--force` can overwrite existing generated files:
 
 ```bash
 npx react-ai-chat init --force
 ```
 
-Make sure you have committed or backed up your changes before using `--force`.
+If you have customized the generated files, commit your changes before using `--force`.
 
-## Generated UI vs ready-made UI
+Treat regeneration as a fresh generation step rather than a safe update mechanism for customized components.
 
-The two approaches solve different needs.
+## When should you use generated UI?
 
-The ready-made component:
+Use the ready-made `<Chatbot />` when the existing interface and its configuration props are enough for your application.
 
-```tsx
-<Chatbot />
-```
+Use the generated chatbot when you need to change the internal React structure, message rendering, input behavior, or CSS beyond what the ready-made component exposes.
 
-is the fastest way to add a chatbot.
-
-The generated component gives you the source files:
-
-```text
-chatbot/
-├── chatbot.tsx
-├── chatbot-header.tsx
-├── chatbot-messages.tsx
-├── chatbot-input.tsx
-└── chatbot.css
-```
-
-Choose the generated UI when you need to modify the internal structure rather than only configuring the component.
+The generated approach gives you direct ownership of the UI while still using `react-ai-chat` for the underlying chatbot state and behavior.
 
 ## Next steps
 
 <Cards>
   <Card
     title="Customization"
-    description="Configure and customize the ready-made chatbot."
+    description="Configure the ready-made chatbot through its props."
     href="/docs/guides/customization"
   />
   <Card
     title="Theming"
-    description="Customize the generated and ready-made chatbot themes."
+    description="Customize colors, modes, and visual tokens."
     href="/docs/guides/theming"
   />
   <Card
     title="Chatbot Context"
-    description="Use chat state and actions in your own components."
+    description="Use chatbot state and actions in your own components."
     href="/docs/api/use-chatbot-context"
+  />
+  <Card
+    title="CLI"
+    description="Explore all CLI commands and generation options."
+    href="/docs/guides/cli"
   />
 </Cards>

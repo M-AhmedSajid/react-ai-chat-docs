@@ -3,7 +3,9 @@ title: Custom UI
 description: Build a completely custom chatbot interface with ChatbotProvider and useChatbotContext.
 ---
 
-# Custom UI
+---
+
+## Overview
 
 The ready-made `<Chatbot />` component is useful when you want a complete chatbot interface with minimal setup.
 
@@ -224,23 +226,27 @@ return (
 );
 ```
 
-## Clear the conversation
+## Control the chatbot
 
-Use the context's conversation controls when you want to provide a reset button.
+Use `isOpen` and `setIsOpen` when your custom UI needs to control whether the chatbot is open.
 
 ```tsx
 "use client";
 
 import { useChatbotContext } from "react-ai-chat";
 
-export function ClearChatButton() {
-  const { clearMessages } = useChatbotContext();
+export function ChatControls() {
+  const { isOpen, setIsOpen } = useChatbotContext();
 
-  return <button onClick={clearMessages}>New chat</button>;
+  return (
+    <button onClick={() => setIsOpen(!isOpen)}>
+      {isOpen ? "Close chat" : "Open chat"}
+    </button>
+  );
 }
 ```
 
-This can be useful for a "New conversation" action in your custom header.
+This is useful when your custom interface has its own open and close controls.
 
 ## Use starter prompts
 
@@ -258,16 +264,20 @@ const prompts = [
 ];
 
 export function StarterPrompts() {
-  const { setInput, handleSubmit } = useChatbotContext();
+  const { handleSubmit, isLoading } = useChatbotContext();
 
-  function selectPrompt(prompt: string) {
-    setInput(prompt);
+  async function selectPrompt(prompt: string) {
+    await handleSubmit(undefined, prompt);
   }
 
   return (
     <div>
       {prompts.map((prompt) => (
-        <button key={prompt} onClick={() => selectPrompt(prompt)}>
+        <button
+          key={prompt}
+          onClick={() => selectPrompt(prompt)}
+          disabled={isLoading}
+        >
           {prompt}
         </button>
       ))}
@@ -284,6 +294,8 @@ Because the UI is yours, the header can contain anything you need:
 
 ```tsx
 export function ChatHeader() {
+  const { isOpen, setIsOpen } = useChatbotContext();
+
   return (
     <header className="flex items-center justify-between border-b p-4">
       <div>
@@ -291,7 +303,9 @@ export function ChatHeader() {
         <p>Ask about our documentation</p>
       </div>
 
-      <ClearChatButton />
+      <button onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? "Close" : "Open"}
+      </button>
     </header>
   );
 }
@@ -512,7 +526,7 @@ Here is a small custom chatbot built with the context API:
 import { ChatbotProvider, useChatbotContext } from "react-ai-chat";
 
 function ChatbotUI() {
-  const { messages, input, setInput, handleSubmit, isLoading, clearMessages } =
+  const { messages, input, setInput, handleSubmit, isLoading } =
     useChatbotContext();
 
   return (
@@ -522,8 +536,6 @@ function ChatbotUI() {
           <h2 className="font-semibold">AI Assistant</h2>
           <p className="text-sm opacity-70">Ask me anything</p>
         </div>
-
-        <button onClick={clearMessages}>New chat</button>
       </header>
 
       <main className="flex-1 space-y-4 overflow-y-auto p-4">

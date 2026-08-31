@@ -1,47 +1,51 @@
 ---
 title: Theming
-description: Customize the appearance of your react-ai-chat chatbot with theme tokens and light and dark modes.
+description: Customize the appearance of your react-ai-chat chatbot with theme tokens, custom CSS, and light and dark modes.
 ---
 
 ---
 
-# Theming
+## Introduction
 
-`react-ai-chat` lets you customize the chatbot's appearance through the `theme` and `themeMode` props.
+`react-ai-chat` gives you several ways to customize the chatbot's appearance.
 
-You can use the built-in light and dark modes or provide your own theme tokens.
+Use `themeMode` to control the color mode, `theme` to change the built-in design tokens, and `classNames` when you need custom CSS for supported elements.
+
+For deeper control over the markup and component structure, use the [Generated Chatbot](/docs/guides/generated-chatbot).
 
 ## Theme mode
 
-Set `themeMode` to control which theme the chatbot uses.
+Use `themeMode` to control which color mode the chatbot uses.
 
-```tsx id="v2k8mx"
+```tsx
 <Chatbot themeMode="light" />
 ```
 
-```tsx id="q6p3zr"
+```tsx
 <Chatbot themeMode="dark" />
 ```
 
-```tsx id="n8w4yc"
+```tsx
 <Chatbot themeMode="auto" />
 ```
 
 The available values are:
 
-| Value   | Behavior                            |
-| ------- | ----------------------------------- |
-| `light` | Always use the light theme          |
-| `dark`  | Always use the dark theme           |
-| `auto`  | Follow the user's system preference |
+| Value   | Behavior                                  |
+| ------- | ----------------------------------------- |
+| `light` | Always use the light theme                |
+| `dark`  | Always use the dark theme                 |
+| `auto`  | Follow the user's system color preference |
 
 The default is `auto`.
+
+> Make sure the value documented here matches the version of `react-ai-chat` you are using. The theme mode API is part of the package's public API.
 
 ## Custom theme
 
 Use the `theme` prop to customize the chatbot's design tokens.
 
-```tsx id="m4r7sp"
+```tsx
 <Chatbot
   theme={{
     primaryColor: "#2563eb",
@@ -55,11 +59,9 @@ Use the `theme` prop to customize the chatbot's design tokens.
 />
 ```
 
-Theme values are applied to the chatbot's CSS variables.
+You only need to provide the values you want to change.
 
-You can override only the values you need:
-
-```tsx id="c9x2kv"
+```tsx
 <Chatbot
   theme={{
     primaryColor: "#7c3aed",
@@ -67,25 +69,25 @@ You can override only the values you need:
 />
 ```
 
-The remaining values continue using the package defaults.
+Any omitted values continue using the package defaults.
 
 ## Theme tokens
 
-The theme API provides tokens for the main chatbot surfaces and controls.
+The `theme` object supports the following tokens:
 
-| Token               | Purpose                                  |
-| ------------------- | ---------------------------------------- |
-| `primaryColor`      | Primary accent color                     |
-| `primaryForeground` | Text color used on primary elements      |
-| `background`        | Main chatbot background                  |
-| `foreground`        | Main text color                          |
-| `mutedBackground`   | Background used by secondary UI elements |
-| `mutedForeground`   | Secondary text color                     |
-| `borderColor`       | Border color                             |
+| Token               | Purpose                                           |
+| ------------------- | ------------------------------------------------- |
+| `primaryColor`      | Primary accent color used by interactive elements |
+| `primaryForeground` | Text color used on primary elements               |
+| `background`        | Main chatbot background                           |
+| `foreground`        | Main text color                                   |
+| `mutedBackground`   | Background used by secondary UI elements          |
+| `mutedForeground`   | Text color used by secondary UI elements          |
+| `borderColor`       | Border color used throughout the chatbot          |
 
-A complete theme can look like:
+For example:
 
-```tsx id="w7m3nf"
+```tsx
 const theme = {
   primaryColor: "#2563eb",
   primaryForeground: "#ffffff",
@@ -95,13 +97,15 @@ const theme = {
   mutedForeground: "#6b7280",
   borderColor: "#e5e7eb",
 };
+
+<Chatbot theme={theme} />;
 ```
 
 ## Light and dark overrides
 
-You can define values that apply specifically to each color mode.
+You can provide different token values for light and dark modes.
 
-```tsx id="a5q8xr"
+```tsx
 <Chatbot
   theme={{
     primaryColor: "#7c3aed",
@@ -124,13 +128,15 @@ You can define values that apply specifically to each color mode.
 />
 ```
 
-The top-level values apply generally, while `light` and `dark` provide mode-specific overrides.
+Top-level values provide the general theme. Values inside `light` or `dark` override them for the corresponding mode.
+
+This lets you keep the same brand color while adapting the chatbot's surfaces and text for each mode.
 
 ## Match your brand
 
-A common setup is to use your application's primary brand color:
+You can use your application's primary brand color as the chatbot accent.
 
-```tsx id="p3v6km"
+```tsx
 <Chatbot
   theme={{
     primaryColor: "#7c3aed",
@@ -139,9 +145,9 @@ A common setup is to use your application's primary brand color:
 />
 ```
 
-You can combine this with custom light and dark surface colors:
+For a complete light and dark setup:
 
-```tsx id="h8r2wc"
+```tsx
 <Chatbot
   theme={{
     primaryColor: "#7c3aed",
@@ -160,11 +166,11 @@ You can combine this with custom light and dark surface colors:
 />
 ```
 
-## Custom CSS classes
+## Custom CSS
 
-When using the ready-made `<Chatbot />`, use `classNames` to attach your own classes to supported elements.
+Use `classNames` when the built-in theme tokens are not enough.
 
-```tsx id="r5m9qx"
+```tsx
 <Chatbot
   classNames={{
     wrapper: "custom-chatbot",
@@ -175,66 +181,61 @@ When using the ready-made `<Chatbot />`, use `classNames` to attach your own cla
 />
 ```
 
-The available keys are:
+The supported keys are:
 
 | Key       | Element              |
 | --------- | -------------------- |
 | `wrapper` | Root chatbot wrapper |
-| `trigger` | Chat trigger         |
+| `trigger` | Chat trigger button  |
 | `window`  | Chat window          |
 | `header`  | Chat window header   |
 
-You can then style those elements:
+You can then define your own CSS:
 
-```css id="y4c7np"
+```css
 .custom-window {
   border-radius: 24px;
 }
 ```
 
-The class names are applied alongside the package's own styles.
+Your classes are applied alongside the package's built-in styles.
+
+Use `theme` for the chatbot's design tokens. Use `classNames` when you need CSS-level changes to supported elements.
+
+For complete customization of the component structure, see [Generated Chatbot](/docs/guides/generated-chatbot).
 
 ## Generated chatbot
 
-The generated chatbot gives you direct access to its source and CSS.
+The generated chatbot gives you the source code and CSS inside your project.
 
 Generate it with:
 
-```bash id="z8w3km"
+```bash
 npx react-ai-chat init
 ```
 
-You can then modify the generated CSS to make deeper visual changes.
+The generated files can then be edited directly.
 
-For changes to the React structure itself, edit the generated components directly.
+You can change:
+
+- CSS and visual styling
+- Component markup
+- Message rendering
+- Header layout
+- Input layout
+- Interaction behavior
+
+The generated chatbot is useful when the ready-made `<Chatbot />` does not provide enough control through props.
 
 See [Generated Chatbot](/docs/guides/generated-chatbot).
 
-## Theme mode in generated UI
+## Accessibility
 
-The generated chatbot uses the same theme mode values:
-
-```tsx id="f6q2xr"
-<Chatbot themeMode="dark" />
-```
-
-```tsx id="b9m4vc"
-<Chatbot themeMode="light" />
-```
-
-```tsx id="k3r7wp"
-<Chatbot themeMode="auto" />
-```
-
-`auto` follows the user's system color preference.
-
-## Keep themes accessible
-
-When choosing custom colors, make sure text remains readable against its background.
+Custom colors should maintain sufficient contrast between text and backgrounds.
 
 For example:
 
-```tsx id="s8n2qm"
+```tsx
 <Chatbot
   theme={{
     primaryColor: "#2563eb",
@@ -243,11 +244,11 @@ For example:
 />
 ```
 
-Test your custom colors in both light and dark modes when your application supports both.
+When supporting both light and dark modes, test your custom theme in each mode.
 
 ## Complete example
 
-```tsx id="m7x4kc"
+```tsx
 import { Chatbot } from "react-ai-chat";
 import "react-ai-chat/style.css";
 
