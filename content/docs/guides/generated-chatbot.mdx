@@ -145,7 +145,7 @@ The generated header renders the configured title and subtitle and includes the 
 
 You can customize the header through the component props:
 
-````tsx
+```tsx
 <Chatbot
   title="Support Assistant"
   subtitle="We're here to help"
@@ -164,7 +164,7 @@ It uses `useChatbotContext()` to access values such as:
 
 ```tsx
 const { messages, isLoading, handleSubmit } = useChatbotContext();
-````
+```
 
 Assistant messages are rendered with `react-markdown`.
 
@@ -172,7 +172,7 @@ The generated UI can include starter prompts for the empty conversation state.
 
 You can customize the prompts through the `starterPrompts` prop:
 
-````tsx
+```tsx
 <Chatbot
   starterPrompts={[
     "What can you help me with?",
@@ -202,7 +202,7 @@ It uses the chatbot context to read and update the input:
 
 ```tsx
 const { input, setInput, handleSubmit, isLoading } = useChatbotContext();
-````
+```
 
 The generated input prevents submission while a response is loading or when the input is empty.
 

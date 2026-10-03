@@ -248,22 +248,94 @@ Your server
 RAG retrieval
 ```
 
-## Embedding progress
+## Resumable embedding generation
 
-During generation, the CLI reports the progress of each embedding batch and the model currently being used.
+Embedding progress is saved after each successful batch. This protects long indexing runs from losing completed work if the process is interrupted or the embedding provider stops accepting requests.
+
+If an embedding run is interrupted or stops because of a provider quota or rate limit, run the same command again:
+
+```bash
+npx react-ai-chat embed
+```
+
+If an incomplete run is found, the CLI asks whether you want to continue from the saved progress or start a new embedding run.
+
+### Continue an incomplete run
+
+Choose **Continue** to reuse the saved embedding configuration and skip chunks that were already embedded successfully.
+
+Each saved chunk is matched using:
+
+- Chunk ID
+- SHA-256 hash of the chunk content
+
+If a source chunk has changed since the previous run, it is embedded again.
 
 For example:
 
 ```text
-Embedding batch 1/4: chunks 1-32/100
-Embedding batch 2/4: chunks 33-64/100
-Embedding batch 3/4: chunks 65-96/100
-Embedding batch 4/4: chunks 97-100/100
+Previous run
+     ↓
+Chunks 1-200 completed
+     ↓
+Process interrupted
+     ↓
+Run `npx react-ai-chat embed` again
+     ↓
+Resume with remaining chunks
 ```
 
-If a batch fails and a fallback model was configured, the CLI can continue processing that batch with the fallback provider configuration.
+The CLI keeps the original chunk positions in its progress output:
 
-The generated index records embedding metadata so retrieval can validate that the configured provider and model are compatible.
+```text
+Embedding batch 1: chunks 201-262/262 via google (gemini-embedding-2)
+```
+
+### Start a new run
+
+Choose **Start a new embedding run** when you want to discard the saved progress and generate the index from the beginning.
+
+Temporary embedding progress is stored at:
+
+```text
+chatbot/embedding.progress.json
+```
+
+The progress file is separate from the persistent embedding configuration:
+
+```text
+chatbot/embedding.config.json
+```
+
+The progress file is temporary and should not be committed to your repository.
+
+### Changed and removed chunks
+
+When continuing an incomplete run, the CLI compares the saved chunks with the current source documents.
+
+If a chunk's content changed, its old embedding is discarded and the chunk is embedded again.
+
+If a chunk no longer exists in the current documents, its saved progress is removed.
+
+This keeps the saved progress aligned with the current source content.
+
+### Rate limits and interruptions
+
+If the provider continues rejecting requests after the configured retries, the CLI reports how many chunks were generated and how many remain.
+
+For example:
+
+```text
+Progress saved:
+  Generated: 200 / 262
+  Remaining: 62
+
+Run "npx react-ai-chat embed" again to continue from where it stopped.
+```
+
+Progress is written only after a batch completes successfully. An interrupted or failed batch is therefore processed again when you continue the run.
+
+After all chunks are successfully embedded, `embeddings.json` is saved and the temporary progress file is deleted automatically.
 
 ## Environment variables
 
@@ -283,15 +355,24 @@ Do not commit API keys to your repository.
 
 ## Re-running the command
 
-Run the embed command again whenever your source documents change:
+Run the embed command whenever your source documents change:
 
 ```bash
 npx react-ai-chat embed
 ```
 
-The command creates a new index from the selected documents.
+If no incomplete embedding run exists, the CLI starts a new embedding run.
 
-If you change the embedding provider, model, or dimensions, regenerate the index before using it for retrieval.
+If an incomplete run exists, the CLI asks whether you want to:
+
+- Continue from the saved progress
+- Start a new embedding run
+
+When continuing, chunks that were already embedded and have not changed are skipped.
+
+If you change the embedding provider, model, or dimensions, the saved progress cannot be reused with the new configuration. Start a new embedding run with the new configuration.
+
+After a successful run, the generated `embeddings.json` file is saved and the temporary progress file is removed.
 
 ## Why dimensions matter
 

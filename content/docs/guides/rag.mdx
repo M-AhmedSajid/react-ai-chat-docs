@@ -326,12 +326,44 @@ Regenerate the index whenever your source documents change:
 npx react-ai-chat embed
 ```
 
-You should also regenerate it when you change:
+If an embedding run is interrupted or stops because of a provider quota or rate limit, progress is saved after each successful batch.
 
-- Embedding provider
-- Embedding model
-- Embedding dimensions
-- Source documents
+Run the same command again to continue:
+
+```bash
+npx react-ai-chat embed
+```
+
+The CLI detects the incomplete run and asks whether you want to continue from the saved progress or start a new embedding run.
+
+When continuing:
+
+* Already-embedded chunks are skipped.
+* Changed chunks are embedded again.
+* Removed chunks are removed from the saved progress.
+* The saved embedding provider and model are reused.
+
+Each saved chunk is matched using its chunk ID and a SHA-256 hash of its content.
+
+Temporary progress is stored in:
+
+```text
+chatbot/embedding.progress.json
+```
+
+The progress file is deleted automatically after the final embedding index is generated successfully.
+
+It is separate from the persistent embedding configuration:
+
+```text
+chatbot/embedding.config.json
+```
+
+You should start a new embedding run when changing:
+
+* Embedding provider
+* Embedding model
+* Embedding dimensions
 
 The generated index represents the embedding configuration used when it was created.
 

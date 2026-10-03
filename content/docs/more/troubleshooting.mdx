@@ -206,57 +206,92 @@ Regenerate the embedding index.
 
 The index is generated from your source documents, so changing those documents does not automatically update an existing index.
 
-Run your indexing command again:
+Run:
 
 ```bash
-npx react-ai-chat --google
+npx react-ai-chat embed
 ```
 
-If you use another provider, select the corresponding CLI option:
+The CLI will ask you to select the embedding provider, model, dimensions, source directory, and output path.
 
-```bash
-npx react-ai-chat --openai
-```
+If an embedding run is interrupted or stops because of a provider quota or rate limit, progress is saved after each successful batch.
 
-Then make sure your application is loading the newly generated index.
+Run the same command again to continue from where it stopped. The CLI will detect the incomplete run and ask whether you want to continue or start a new embedding run.
+
+When continuing, unchanged chunks that were already embedded are skipped. Changed chunks are embedded again.
+
+After a successful run, make sure your application is loading the newly generated index.
 
 ## The CLI says an embedding provider is required
 
-If you run:
+The `embed` command needs an embedding provider to generate your index.
+
+Run:
 
 ```bash
-npx react-ai-chat
+npx react-ai-chat embed
 ```
 
-without a provider, the CLI cannot know which embedding service should generate your index.
+The CLI will prompt you to select the provider.
 
-Specify one:
-
-```bash
-npx react-ai-chat --google
-```
-
-Other supported provider flags include:
+Supported providers include:
 
 ```text
---openai
---voyage
---cohere
---jina
---huggingface
+Google
+OpenAI
+Voyage AI
+Cohere
+Jina AI
+Hugging Face
 ```
+
+The selected provider and model are saved in:
+
+```text
+chatbot/embedding.config.json
+```
+
+If you continue an incomplete embedding run, the saved provider and model configuration are reused.
+
+## An embedding run was interrupted
+
+Embedding generation saves progress after every successful batch.
+
+If the process is interrupted, or the provider stops accepting requests because of a rate limit or quota, run the same command again:
+
+```bash
+npx react-ai-chat embed
+```
+
+The CLI detects the saved progress and asks whether you want to continue or start a new embedding run.
+
+Choose **Continue** to skip chunks that were already embedded successfully.
+
+Temporary progress is stored in:
+
+```text
+chatbot/embedding.progress.json
+```
+
+Each saved chunk includes its chunk ID and a SHA-256 hash of its content. If a chunk changed after the previous run, it is embedded again.
+
+If you choose **Start a new embedding run**, the saved progress is deleted and generation starts from the beginning.
+
+After all chunks are successfully embedded, the generated `embeddings.json` is saved and the temporary progress file is deleted.
 
 ## The CLI cannot find my documents
 
-Check the input path you pass to the CLI.
+Check the source directory selected during the `embed` command.
 
-For example:
+Run:
 
 ```bash
-npx react-ai-chat --google ./docs ./data/embeddings.json
+npx react-ai-chat embed
 ```
 
-Make sure `./docs` exists and contains supported source files.
+The CLI will ask you to select the source directory and output path.
+
+Make sure the source directory exists and contains supported source files.
 
 If you are using the default paths, run the command from the root of your project.
 

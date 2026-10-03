@@ -226,10 +226,10 @@ export const POST = createChatRoute({
 });
 ```
 
-The CLI can generate the embedding index:
+The CLI generates the embedding index:
 
 ```bash
-npx react-ai-chat --google
+npx react-ai-chat embed
 ```
 
 The server then embeds the user's question, searches the index, and provides relevant context to the model.
@@ -242,38 +242,28 @@ The CLI supports:
 
 - Google
 - OpenAI
-- Voyage
+- Voyage AI
 - Cohere
-- Jina
+- Jina AI
 - Hugging Face
 
-For example:
+Choose the provider interactively when running:
 
 ```bash
-npx react-ai-chat --google
-```
-
-or:
-
-```bash
-npx react-ai-chat --openai
+npx react-ai-chat embed
 ```
 
 See [Providers](/docs/api/providers).
 
 ## Can I use a different embedding provider for RAG?
 
-The embedding provider used to query the index should be compatible with the provider used to generate that index.
+The embedding provider used to query the index should be compatible with the embedding configuration used to generate that index.
 
-For example, if you create an index with:
+For example, if you create an index with Google, use the corresponding Google embedding provider when retrieving context.
 
-```bash
-npx react-ai-chat --google
-```
+The embedding model and dimensions used for retrieval need to match the configuration represented by the index.
 
-use the corresponding Google embedding provider when retrieving context.
-
-Mixing unrelated embedding models can produce incompatible vectors and poor retrieval results.
+See [RAG](/docs/guides/rag).
 
 ## How do I generate an embedding index?
 
@@ -289,20 +279,19 @@ content/
 Then run:
 
 ```bash
-npx react-ai-chat --google
+npx react-ai-chat embed
 ```
 
-The default output is:
+The CLI walks you through:
 
-```text
-chatbot/embeddings.json
-```
+1. Embedding provider
+2. Embedding model
+3. Output dimensions
+4. Optional fallback model
+5. Source directory
+6. Output path
 
-You can choose custom paths:
-
-```bash
-npx react-ai-chat --google ./docs ./data/embeddings.json
-```
+The generated index is saved to the output path you select.
 
 See [CLI](/docs/guides/cli).
 
@@ -310,13 +299,32 @@ See [CLI](/docs/guides/cli).
 
 No.
 
-The index is generated from your source documents at the time you run the CLI.
-
-After changing your content, regenerate it:
+The index is generated from your source documents when you run:
 
 ```bash
-npx react-ai-chat --google
+npx react-ai-chat embed
 ```
+
+After changing your content, run the command again.
+
+If an embedding run is interrupted or stops because of a provider quota or rate limit, progress is saved after each successful batch.
+
+Running the same command again detects the incomplete run and lets you:
+
+- Continue from the saved progress
+- Start a new embedding run
+
+When continuing, already-embedded chunks are skipped when their chunk ID and SHA-256 content hash still match the current source.
+
+Changed chunks are embedded again, while removed chunks are removed from the saved progress.
+
+Temporary progress is stored in:
+
+```text
+chatbot/embedding.progress.json
+```
+
+The progress file is automatically deleted after a successful embedding run.
 
 For production applications, run the indexing step as part of your content publishing or deployment workflow when appropriate.
 
