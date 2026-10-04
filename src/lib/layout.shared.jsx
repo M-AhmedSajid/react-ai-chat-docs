@@ -1,4 +1,4 @@
-import { Package } from "lucide-react";
+import { HandHeart, Package } from "lucide-react";
 
 export function baseOptions() {
   return {
@@ -17,12 +17,20 @@ export function baseOptions() {
       },
       {
         type: "icon",
+        label: "Patreon Donation/Support Link",
+        text: "Patreon Donation/Support Link",
+        icon: <HandHeart />,
+        url: "https://www.patreon.com/cw/mahmedsajid",
+        secondary: true,
+      },
+      {
+        type: "icon",
         label: "NPM Package Link",
         text: "NPM Package Link",
         icon: <Package />,
         url: "https://www.npmjs.com/package/react-ai-chat",
-        secondary: true
-      }
+        secondary: true,
+      },
     ],
     nav: {
       title: (
@@ -43,6 +51,6 @@ export function baseOptions() {
       ),
     },
     githubUrl: "https://github.com/M-AhmedSajid/react-ai-chat",
-    themeSwitch: { mode: "select"},
+    themeSwitch: { mode: "select" },
   };
 }

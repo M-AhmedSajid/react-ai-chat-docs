@@ -191,6 +191,7 @@ const client = new GoogleGenAI({
 
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 

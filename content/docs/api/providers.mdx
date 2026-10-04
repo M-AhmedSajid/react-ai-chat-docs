@@ -52,6 +52,7 @@ When using a generated embedding index, use the model stored in the index:
 ```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -89,6 +90,7 @@ Use the model recorded in your generated index when configuring RAG:
 ```tsx
 const provider = openAIEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -126,6 +128,7 @@ For an existing generated index:
 ```tsx
 const provider = voyageEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -163,6 +166,7 @@ For an existing generated index:
 ```tsx
 const provider = cohereEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -195,6 +199,7 @@ For an existing index:
 ```tsx
 const provider = jinaEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -230,6 +235,7 @@ For an existing generated index:
 ```tsx
 const provider = huggingFaceEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -294,6 +300,7 @@ your RAG route should use the same embedding configuration:
 ```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -338,6 +345,7 @@ const client = new GoogleGenAI({
 
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 
 export const POST = createChatRoute({
@@ -385,6 +393,7 @@ If embeddings were generated using a fallback model, configure your retrieval pr
 ```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 

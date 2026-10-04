@@ -229,6 +229,7 @@ const client = new GoogleGenAI({
 
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 
 export const POST = createChatRoute({
@@ -248,6 +249,7 @@ The generated `embeddings.json` contains metadata about the embedding configurat
 ```tsx
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 ```
 
@@ -338,10 +340,10 @@ The CLI detects the incomplete run and asks whether you want to continue from th
 
 When continuing:
 
-* Already-embedded chunks are skipped.
-* Changed chunks are embedded again.
-* Removed chunks are removed from the saved progress.
-* The saved embedding provider and model are reused.
+- Already-embedded chunks are skipped.
+- Changed chunks are embedded again.
+- Removed chunks are removed from the saved progress.
+- The saved embedding provider and model are reused.
 
 Each saved chunk is matched using its chunk ID and a SHA-256 hash of its content.
 
@@ -361,9 +363,9 @@ chatbot/embedding.config.json
 
 You should start a new embedding run when changing:
 
-* Embedding provider
-* Embedding model
-* Embedding dimensions
+- Embedding provider
+- Embedding model
+- Embedding dimensions
 
 The generated index represents the embedding configuration used when it was created.
 
@@ -415,6 +417,7 @@ const client = new GoogleGenAI({
 
 const provider = googleEmbedding(client, {
   model: embeddings.model,
+  dimensions: embeddings.dimensions,
 });
 
 export const POST = createChatRoute({

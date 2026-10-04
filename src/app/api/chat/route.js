@@ -8,7 +8,9 @@ const client = new GoogleGenAI({
 });
 
 const provider = googleEmbedding(client, {
-    model: embeddings.model
+    model: embeddings.model,
+    dimensions: embeddings.dimensions,
+    dimensions: embeddings.dimensions,
 });
 
 const systemPrompt = `
