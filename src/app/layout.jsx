@@ -1,8 +1,12 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { RootProvider } from "fumadocs-ui/provider/next";
+import { TreeContextProvider } from "fumadocs-ui/contexts/tree";
+
 import { MyChatbot } from "@/components/mychatbot";
+import { source } from "@/lib/source";
+import { Provider } from "@/components/provider";
+import { NextProvider } from "fumadocs-core/framework/next";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -32,17 +36,12 @@ export default function RootLayout({ children }) {
       data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans">
-        <RootProvider
-          theme={{ enableSystem: true }}
-          search={{
-            options: {
-              api: "/api/search",
-            },
-          }}
-        >
-          <MyChatbot />
-          {children}
-        </RootProvider>
+        <NextProvider>
+          <TreeContextProvider tree={source.getPageTree()}>
+            <MyChatbot />
+            <Provider>{children}</Provider>
+          </TreeContextProvider>
+        </NextProvider>
       </body>
     </html>
   );
